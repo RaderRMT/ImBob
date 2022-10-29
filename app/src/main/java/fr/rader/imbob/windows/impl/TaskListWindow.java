@@ -26,9 +26,9 @@ public class TaskListWindow extends AbstractWindow {
     }
 
     @Override
-    protected void preRender() {
+    protected void preRender(float menuBarHeight) {
         ImGui.setNextWindowSize(248, 102);
-        ImGui.setNextWindowPos(0, 0);
+        ImGui.setNextWindowPos(0, menuBarHeight);
     }
 
     @Override

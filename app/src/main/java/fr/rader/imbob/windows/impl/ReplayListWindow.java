@@ -42,9 +42,9 @@ public class ReplayListWindow extends AbstractWindow {
     }
 
     @Override
-    protected void preRender() {
+    protected void preRender(float menuBarHeight) {
         ImGui.setNextWindowSize(248, 125);
-        ImGui.setNextWindowPos(0, 101);
+        ImGui.setNextWindowPos(0, menuBarHeight + 101);
     }
 
     @Override

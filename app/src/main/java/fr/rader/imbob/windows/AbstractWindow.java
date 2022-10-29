@@ -53,7 +53,7 @@ public abstract class AbstractWindow {
      * This method is called at the start of the {@link AbstractWindow#render()} method,
      * and it is only called if the window is open.
      */
-    protected void preRender() {
+    protected void preRender(float menuBarHeight) {
     }
 
     /**
@@ -80,13 +80,13 @@ public abstract class AbstractWindow {
      * If no name has been given, the default "Unnamed window" name is used.<br>
      * If no window flags have been given, the default {@link ImGuiWindowFlags#None} flag is used.
      */
-    public final void render() {
+    public final void render(float menuBarHeight) {
         // we ignore the render if the window is closed
         if (!this.windowOpen.get()) {
             return;
         }
 
-        preRender();
+        preRender(menuBarHeight);
 
         // if we can close the window, we begin
         // a window with the windowClose boolean,

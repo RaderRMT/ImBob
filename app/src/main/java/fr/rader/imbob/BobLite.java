@@ -7,6 +7,7 @@ import org.lwjgl.glfw.GLFW;
 
 import fr.rader.imbob.windows.AbstractWindow;
 import fr.rader.imbob.windows.impl.FileExplorerWindow;
+import fr.rader.imbob.windows.impl.LicensesWindow;
 import fr.rader.imbob.windows.impl.ProgressBarWindow;
 import fr.rader.imbob.windows.impl.ReplayListWindow;
 import fr.rader.imbob.windows.impl.TaskListWindow;
@@ -17,8 +18,13 @@ import imgui.app.Configuration;
 
 public class BobLite extends Application {
 
+    private static final int WINDOW_WIDTH = 535;
+    private static final int WINDOW_HEIGHT = 375;
+
     private final Logger logger;
     private final List<AbstractWindow> windows;
+
+    private final LicensesWindow licensesWindow;
 
     BobLite() {
         this.logger = new Logger();
@@ -27,6 +33,7 @@ public class BobLite extends Application {
         ProgressBarWindow progressBar = new ProgressBarWindow();
         TaskListWindow taskListWindow = new TaskListWindow();
         TaskWindow taskWindow = new TaskWindow();
+        this.licensesWindow = new LicensesWindow();
 
         taskWindow.setTaskListWindowReference(taskListWindow);
 
@@ -35,6 +42,7 @@ public class BobLite extends Application {
         this.windows.add(taskWindow);
         this.windows.add(new ReplayListWindow(taskListWindow, progressBar));
         this.windows.add(taskListWindow);
+        this.windows.add(licensesWindow);
     }
 
     @Override
@@ -42,8 +50,8 @@ public class BobLite extends Application {
         // we change the window title
         config.setTitle("Bob Lite");
         // we set the window size
-        config.setWidth(535);
-        config.setHeight(375);
+        config.setWidth(WINDOW_WIDTH);
+        config.setHeight(WINDOW_HEIGHT);
 
         // and we initialize the window
         super.initWindow(config);
@@ -66,13 +74,28 @@ public class BobLite extends Application {
 
     @Override
     public void process() {
+        ImGui.beginMainMenuBar();
+        float menuBarHeight = ImGui.getWindowSizeY();
+
+        GLFW.glfwSetWindowSize(getHandle(), WINDOW_WIDTH, WINDOW_HEIGHT + (int) menuBarHeight);
+
+        if (ImGui.beginMenu("Menu")) {
+            if (ImGui.menuItem("Licenses")) {
+                this.licensesWindow.setVisible(true);
+            }
+
+            ImGui.endMenu();
+        }
+
+        ImGui.endMainMenuBar();
+
         // we loop through all windows and render them
         for (AbstractWindow window : this.windows) {
-            window.render();
+            window.render(menuBarHeight);
         }
 
         // and finally, we render the logger
-        logger.render();
+        logger.render(menuBarHeight);
     }
 
     void start() {

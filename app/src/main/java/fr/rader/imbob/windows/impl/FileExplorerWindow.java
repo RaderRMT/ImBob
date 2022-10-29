@@ -51,9 +51,9 @@ public class FileExplorerWindow extends AbstractWindow {
     }
 
     @Override
-    protected void preRender() {
+    protected void preRender(float menuBarHeight) {
         ImGui.setNextWindowSize(535, 375);
-        ImGui.setNextWindowPos(0, 0);
+        ImGui.setNextWindowPos(0, menuBarHeight);
     }
 
     @Override

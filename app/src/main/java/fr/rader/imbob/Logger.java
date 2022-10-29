@@ -66,9 +66,9 @@ public class Logger {
      * It is package private because we only
      * need to call it in the main class' process method.
     */
-    void render() {
+    void render(float menuBarHeight) {
         ImGui.setNextWindowSize(535, 150);
-        ImGui.setNextWindowPos(0, 225);
+        ImGui.setNextWindowPos(0, menuBarHeight + 225);
 
         // we create the logger window
         if (ImGui.begin("Logs", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove)) {

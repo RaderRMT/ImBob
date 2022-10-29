@@ -20,9 +20,9 @@ public class ProgressBarWindow extends AbstractWindow {
     }
 
     @Override
-    protected void preRender() {
+    protected void preRender(float menuBarHeight) {
         ImGui.setNextWindowSize(279, 71);
-        ImGui.setNextWindowPos(128, 152);
+        ImGui.setNextWindowPos(128, menuBarHeight + 152);
     }
 
     @Override
