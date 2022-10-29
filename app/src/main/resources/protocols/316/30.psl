@@ -1,0 +1,4 @@
+packet "change_game_state" {
+    byte "reason";
+    float "value";
+}
