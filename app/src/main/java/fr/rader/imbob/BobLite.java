@@ -26,6 +26,8 @@ public class BobLite extends Application {
 
     private final LicensesWindow licensesWindow;
 
+    private boolean isWindowResized = false;
+
     BobLite() {
         this.logger = new Logger();
         this.windows = new ArrayList<>();
@@ -77,7 +79,10 @@ public class BobLite extends Application {
         ImGui.beginMainMenuBar();
         float menuBarHeight = ImGui.getWindowSizeY();
 
-        GLFW.glfwSetWindowSize(getHandle(), WINDOW_WIDTH, WINDOW_HEIGHT + (int) menuBarHeight);
+        if (!this.isWindowResized) {
+            GLFW.glfwSetWindowSize(getHandle(), WINDOW_WIDTH, WINDOW_HEIGHT + (int) menuBarHeight);
+            this.isWindowResized = true;
+        }
 
         if (ImGui.beginMenu("Menu")) {
             if (ImGui.menuItem("Licenses")) {
