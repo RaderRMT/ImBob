@@ -12,6 +12,7 @@ import fr.rader.imbob.tasks.annotations.TaskName;
 import fr.rader.imbob.types.nbt.TagCompound;
 import fr.rader.imbob.types.nbt.TagList;
 import fr.rader.imbob.types.nbt.TagLong;
+import fr.rader.imbob.utils.MathUtils;
 import imgui.ImGui;
 import imgui.type.ImInt;
 
@@ -71,9 +72,12 @@ public class TimeChangerTask extends AbstractTask {
 
     @Override
     public void render() {
+        // we clamp the value between 0 and 24000 ticks
+        this.timeOfDay.set(MathUtils.clamp(this.timeOfDay.get(), 0, TICKS_PER_DAY));
+
         ImGui.pushItemWidth(150);
         ImGui.inputInt("Time Of Day", this.timeOfDay);
         ImGui.popItemWidth();
-        ImGui.text("This value is in ticks.");
+        ImGui.text("This uses the same values\nas the \"/time set\" command");
     }
 }
