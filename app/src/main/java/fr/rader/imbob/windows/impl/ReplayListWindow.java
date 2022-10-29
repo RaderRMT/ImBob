@@ -3,6 +3,7 @@ package fr.rader.imbob.windows.impl;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -144,7 +145,8 @@ public class ReplayListWindow extends AbstractWindow {
                 // we copy the replay file to the boblite folder
                 Files.copy(
                         replay.toPath(),
-                        replayCopy.toPath()
+                        replayCopy.toPath(),
+                        StandardCopyOption.REPLACE_EXISTING
                 );
 
                 // and we add the file from the boblite folder to
