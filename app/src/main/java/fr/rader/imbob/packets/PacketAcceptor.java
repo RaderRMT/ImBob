@@ -45,23 +45,33 @@ public class PacketAcceptor {
         return this;
     }
 
+    /**
+     * Accepts a packet.<br>
+     * A packet is accepted if its protocol version is between {@link PacketAcceptor#fromVersion} and {@link PacketAcceptor#toVersion}, and if the packet id is accepted by the {@link Packets}.<br>
+     * If {@link PacketAcceptor#fromVersion} is null, any packet from protocol {@link ProtocolVersion#MC_1_8} up to {@link PacketAcceptor#toVersion} are accepted.<br>
+     * If {@link PacketAcceptor#toVersion} is null, any packet from {@link PacketAcceptor#fromVersion} and later are accepted.<br>
+     * If both {@link PacketAcceptor#fromVersion} and {@link PacketAcceptor#toVersion} are null, the packet will be accepted.<br>
+     *
+     * @param packet    The packet to accept
+     * @return          True if the packet is accepted, false otherwise
+     */
     public boolean accept(Packet packet) {
         if (this.fromVersion != null && this.toVersion != null) {
             return packet.getProtocolVersion().isAfterInclusive(this.fromVersion) &&
                    packet.getProtocolVersion().isBeforeInclusive(this.toVersion) &&
-                   this.packetToAccept.shouldAccept(packet);
+                   this.packetToAccept.accept(packet);
         }
 
         if (this.fromVersion == null && this.toVersion != null) {
             return packet.getProtocolVersion().isBeforeInclusive(this.toVersion) &&
-                   this.packetToAccept.shouldAccept(packet);
+                   this.packetToAccept.accept(packet);
         }
 
         if (this.fromVersion != null && this.toVersion == null) {
             return packet.getProtocolVersion().isAfterInclusive(this.fromVersion) &&
-                   this.packetToAccept.shouldAccept(packet);
+                   this.packetToAccept.accept(packet);
         }
 
-        return this.packetToAccept.shouldAccept(packet);
+        return this.packetToAccept.accept(packet);
     }
 }
