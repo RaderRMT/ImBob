@@ -20,11 +20,12 @@ import imgui.type.ImInt;
 public class TimeChangerTask extends AbstractTask {
 
     private static final int TICKS_PER_DAY = 24_000;
+    private static final int NOON = 6_000;
 
     private final ImInt timeOfDay;
 
     public TimeChangerTask() {
-        this.timeOfDay = new ImInt(6000);
+        this.timeOfDay = new ImInt(NOON);
 
         acceptPacket(PacketAcceptor.accept(Packets.TIME_UPDATE));
         // we accept the Join Game packet starting from MC 1.16 because
