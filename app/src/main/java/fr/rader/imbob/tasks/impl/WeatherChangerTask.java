@@ -89,7 +89,7 @@ public class WeatherChangerTask extends AbstractTask {
             }
         } else {
             // we get the Change Game State packet's reason entry
-            int reason = (int) packet.getEntry("reason").getAs(VariableEntry.class).getValue();
+            int reason = packet.getEntry("reason").getAs(VariableEntry.class).getValueAs(Integer.class);
 
             // we return if the packet doesn't affect the weather
             if (

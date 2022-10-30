@@ -51,7 +51,7 @@ public class TimeChangerTask extends AbstractTask {
                 // by adding or editing the "fixed_time" field
                 VariableEntry dimensionCodec = packet.getEntry("dimension_codec").getAs(VariableEntry.class);
 
-                TagCompound dimensionCodecCompound = (TagCompound) dimensionCodec.getValue();
+                TagCompound dimensionCodecCompound = dimensionCodec.getValueAs(TagCompound.class);
                 TagCompound dimensionTypeRegistry = dimensionCodecCompound.get("minecraft:dimension_type").getAsTagCompound();
                 TagList<TagCompound> value = dimensionTypeRegistry.get("value").getAsCompoundList();
 
