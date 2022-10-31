@@ -7,7 +7,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
-import fr.rader.imbob.Logger;
 import fr.rader.imbob.tasks.TaskExecutor;
 import fr.rader.imbob.utils.OS;
 import fr.rader.imbob.windows.AbstractWindow;
@@ -20,25 +19,30 @@ public class ReplayListWindow extends AbstractWindow {
     private final ImInt selectedReplay;
     private final List<File> replays;
 
-    private final FileExplorerWindow fileExplorer;
-    private final TaskListWindow taskListWindow;
-    private final ProgressBarWindow progressBar;
+    private FileExplorerWindow fileExplorer;
+    private TaskListWindow taskListWindow;
+    private ProgressBarWindow progressBar;
 
     private boolean isReplayNameListDirty = false;
     private String[] replaysName;
 
-    public ReplayListWindow(TaskListWindow taskListWindow, ProgressBarWindow progressBar) {
+    public ReplayListWindow() {
         this.selectedReplay = new ImInt();
         this.replays = new ArrayList<>();
         this.replaysName = new String[0];
-        this.taskListWindow = taskListWindow;
-        this.progressBar = progressBar;
-        this.fileExplorer = FileExplorerWindow.getInstance();
-        this.fileExplorer.setExtensions(new String[] { ".mcpr" });
-        this.fileExplorer.setMultipleFileSelect(true);
 
         setWindowName("Replay List");
         setWindowFlags(ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove);
+    }
+
+    @Override
+    public void init() {
+        this.taskListWindow = getWindowManager().getWindowByClass(TaskListWindow.class);
+        this.progressBar = getWindowManager().getWindowByClass(ProgressBarWindow.class);
+
+        this.fileExplorer = getWindowManager().getWindowByClass(FileExplorerWindow.class);
+        this.fileExplorer.setExtensions(new String[] { ".mcpr" });
+        this.fileExplorer.setMultipleFileSelect(true);
     }
 
     @Override
@@ -153,7 +157,7 @@ public class ReplayListWindow extends AbstractWindow {
                 // the replaysToEdit list so we can edit those and not the original replays
                 replaysToEdit.add(replayCopy);
             } catch (IOException e) {
-                Logger.getInstance().error(e.getMessage());
+                LoggerWindow.error(e.getMessage());
             }
         }
 

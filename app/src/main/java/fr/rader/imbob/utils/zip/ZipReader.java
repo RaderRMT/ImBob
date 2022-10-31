@@ -8,11 +8,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
-import fr.rader.imbob.Logger;
+import fr.rader.imbob.windows.impl.LoggerWindow;
 
 public class ZipReader {
-
-    private final Logger logger = Logger.getInstance();
 
     /** This is the ZIP file we're reading */
     private final File file;
@@ -30,13 +28,13 @@ public class ZipReader {
         this.file = file;
 
         try {
-            this.logger.info("Reading ZIP file \"" + this.file.getName() + '"');
+            LoggerWindow.info("Reading ZIP file \"" + this.file.getName() + '"');
             // we try opening the zip file
             this.zipFile = new ZipFile(this.file);
         } catch (ZipException e) {
-            this.logger.error("ZIP format error: " + e.getLocalizedMessage());
+            LoggerWindow.error("ZIP format error: " + e.getLocalizedMessage());
         } catch (IOException e) {
-            this.logger.error("I/O error: " + e.getLocalizedMessage());
+            LoggerWindow.error("I/O error: " + e.getLocalizedMessage());
         }
     }
 
@@ -52,11 +50,11 @@ public class ZipReader {
         // for it anyway. if it is null, we return false
         // as nothing can't contain an entry
         if (this.zipFile == null) {
-            this.logger.error(this.file.getName() + " is null!");
+            LoggerWindow.error(this.file.getName() + " is null!");
             return false;
         }
 
-        this.logger.info("Looking for entry \"" + entryName + '"');
+        LoggerWindow.info("Looking for entry \"" + entryName + '"');
         // we try to get the entry from the zip.
         // the entry will be null if it doesn't exist,
         // so we just have to return true if the
@@ -65,9 +63,9 @@ public class ZipReader {
         // we print nice messages depending on
         // if the entry has been found or not
         if (!hasEntry) {
-            this.logger.error(this.file.getName() + " does not contain entry \"" + entryName + '"');
+            LoggerWindow.error(this.file.getName() + " does not contain entry \"" + entryName + '"');
         } else {
-            this.logger.info("Entry \"" + entryName + "\" exists");
+            LoggerWindow.info("Entry \"" + entryName + "\" exists");
         }
 
         // and finally we return the boolean
@@ -88,7 +86,7 @@ public class ZipReader {
         // for it anyway. if it is null, we return null
         // as nothing can't contain an entry
         if (this.zipFile == null) {
-            this.logger.error(this.file.getName() + " is null!");
+            LoggerWindow.error(this.file.getName() + " is null!");
             return null;
         }
 
@@ -107,12 +105,12 @@ public class ZipReader {
             // get it as an input stream
             entryStream = this.zipFile.getInputStream(this.zipFile.getEntry(entryName));
         } catch (IOException e) {
-            this.logger.error("I/O error: " + e.getLocalizedMessage());
+            LoggerWindow.error("I/O error: " + e.getLocalizedMessage());
         }
 
         // we print an error message if we couldn't read the entry
         if (entryStream == null) {
-            this.logger.error("Entry \"" + entryName + "\" couldn't be read.");
+            LoggerWindow.error("Entry \"" + entryName + "\" couldn't be read.");
         }
 
         // we return the entry, or null if we couldn't read it
@@ -141,7 +139,7 @@ public class ZipReader {
                 // if the writer doesn't have the entry, we add it and go to the next
                 writer.addEntry(entry.getName(), this.zipFile.getInputStream(entry));
             } catch (IOException e) {
-                this.logger.error("I/O error: " + e.getLocalizedMessage());
+                LoggerWindow.error("I/O error: " + e.getLocalizedMessage());
             }
         }
     }
@@ -162,7 +160,7 @@ public class ZipReader {
             // we close the zip file's stream(s)
             this.zipFile.close();
         } catch (IOException e) {
-            this.logger.error("I/O error: " + e.getLocalizedMessage());
+            LoggerWindow.error("I/O error: " + e.getLocalizedMessage());
         }
     }
 }

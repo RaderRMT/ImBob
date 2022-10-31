@@ -18,7 +18,7 @@ public class VariableEntry extends PacketEntry {
     }
 
     public <T> T getValueAs(Class<T> clazz) {
-        return clazz.cast(this);
+        return clazz.cast(value);
     }
 
     public void setValue(Object value) {

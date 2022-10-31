@@ -1,12 +1,8 @@
 package fr.rader.imbob.utils;
 
-import fr.rader.imbob.Logger;
-
 import java.io.*;
 
 public class LineReader {
-
-    private static final Logger logger = Logger.getInstance();
 
     public static String getLine(File file, int line) {
         try {

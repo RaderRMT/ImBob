@@ -67,4 +67,8 @@ public class StringUtils {
 
         return true;
     }
+
+    public static boolean containsIgnoreCase(String source, String toFind) {
+        return source.toLowerCase().contains(toFind.toLowerCase());
+    }
 }

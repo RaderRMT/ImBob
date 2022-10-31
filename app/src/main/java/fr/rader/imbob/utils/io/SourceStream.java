@@ -1,14 +1,12 @@
 package fr.rader.imbob.utils.io;
 
-import fr.rader.imbob.Logger;
+import fr.rader.imbob.windows.impl.LoggerWindow;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
 public class SourceStream extends FileInputStream {
-
-    private static final Logger logger = Logger.getInstance();
 
     // buffer size for our data array
     private static final byte BUFFER_SIZE = 3;
@@ -125,8 +123,8 @@ public class SourceStream extends FileInputStream {
     }
 
     public void printBuffer() {
-        logger.info("PREVIOUS: " + peek(PREVIOUS));
-        logger.info("CURRENT: " + peek(CURRENT));
-        logger.info("NEXT: " + peek(NEXT));
+        LoggerWindow.info("PREVIOUS: " + peek(PREVIOUS));
+        LoggerWindow.info("CURRENT: " + peek(CURRENT));
+        LoggerWindow.info("NEXT: " + peek(NEXT));
     }
 }

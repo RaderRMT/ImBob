@@ -5,7 +5,7 @@ import fr.rader.imbob.types.Position;
 import fr.rader.imbob.types.VarInt;
 import fr.rader.imbob.types.VarLong;
 import fr.rader.imbob.types.nbt.TagCompound;
-import fr.rader.imbob.Logger;
+import fr.rader.imbob.windows.impl.LoggerWindow;
 import fr.rader.imbob.protocol.ProtocolVersion;
 
 import java.io.*;
@@ -15,37 +15,34 @@ import java.util.UUID;
 
 public class DataReader {
 
-    private static final Logger logger = Logger.getInstance();
-
     private InputStream inputStream;
 
     public DataReader(File file) {
         if (file == null) {
-            logger.error("File is null!");
+            LoggerWindow.error("File is null!");
             return;
         }
 
         if (!file.exists()) {
-            logger.error("File does not exist: " + file.getAbsolutePath());
+            LoggerWindow.error("File does not exist: " + file.getAbsolutePath());
             return;
         }
 
         if (!file.isFile()) {
-            logger.error("File is a directory: " + file.getAbsolutePath());
+            LoggerWindow.error("File is a directory: " + file.getAbsolutePath());
             return;
         }
 
         try {
             this.inputStream = new FileInputStream(file);
         } catch (FileNotFoundException e) {
-            //logger.printStackTrace(e);
             e.printStackTrace();
         }
     }
 
     public DataReader(InputStream inputStream) {
         if (inputStream == null) {
-            logger.error("InputStream is null!");
+            LoggerWindow.error("InputStream is null!");
             return;
         }
 
@@ -291,7 +288,6 @@ public class DataReader {
             try {
                 inputStream.close();
             } catch (IOException e) {
-                //logger.printStackTrace(e);
                 e.printStackTrace();
             }
         }

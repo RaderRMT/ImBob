@@ -15,8 +15,6 @@ import imgui.type.ImInt;
 
 public class FileExplorerWindow extends AbstractWindow {
 
-    private static FileExplorerWindow instance;
-
     private final ImInt selectedDrive;
     private String[] drives;
 
@@ -38,8 +36,6 @@ public class FileExplorerWindow extends AbstractWindow {
         this.selectedFileNames = new ArrayList<>();
         this.selectedFilePaths = new ArrayList<>();
         this.canSelectMultipleFiles = false;
-
-        instance = this;
 
         // we get all the available drives
         updateDrives();
@@ -290,10 +286,6 @@ public class FileExplorerWindow extends AbstractWindow {
 
         // finally, we change the window's visibility
         super.setVisible(visibility);
-    }
-
-    public static FileExplorerWindow getInstance() {
-        return instance;
     }
 
     /**

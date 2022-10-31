@@ -5,8 +5,8 @@ import fr.rader.imbob.psl.packets.definition.rules.*;
 import fr.rader.imbob.psl.tokens.Token;
 import fr.rader.imbob.psl.tokens.TokenList;
 import fr.rader.imbob.types.VarInt;
+import fr.rader.imbob.windows.impl.LoggerWindow;
 import fr.rader.imbob.psl.lexer.Validator;
-import fr.rader.imbob.Logger;
 import fr.rader.imbob.protocol.ProtocolVersion;
 
 import java.io.File;
@@ -19,10 +19,8 @@ import static fr.rader.imbob.psl.tokens.TokenType.*;
 
 public class PacketDefinitionFactory {
 
-    private static final Logger logger = Logger.getInstance();
-
     public static PacketDefinition createPacketDefinition(ProtocolVersion protocol, VarInt packetID) throws IOException {
-        logger.info("Using the new and improved lexer for '" + packetID.getValue() + ".psl' from protocol " + protocol);
+        LoggerWindow.info("Using the new and improved lexer for '" + packetID.getValue() + ".psl' from protocol " + protocol);
 
         // get the source file depending on
         // the protocol and the packet id
@@ -54,7 +52,7 @@ public class PacketDefinitionFactory {
         if (!lexer.hasError()) {
             // if no errors were found, we feed the
             // tokens to the validator for a more complete check
-            logger.info("Validating PSL using the new and improved validator...");
+            LoggerWindow.info("Validating PSL using the new and improved validator...");
             // we create an instance of our Validator,
             // and we give it the tokens from the lexer
             // and the source file to print errors
@@ -69,7 +67,7 @@ public class PacketDefinitionFactory {
             if (validator.isValid()) {
                 // if everything is valid, we reset
                 // the tokens index to the start of the TokenList,
-                logger.info("PSL is valid, generating Packet Definition");
+                LoggerWindow.info("PSL is valid, generating Packet Definition");
                 tokens.reset();
 
                 // and we return a new instance of a PacketDefinition
@@ -85,7 +83,7 @@ public class PacketDefinitionFactory {
         // (so if the lexer found an error
         // or if the validator found an error)
         // we return null
-        logger.error("Invalid PSL");
+        LoggerWindow.error("Invalid PSL");
         return null;
     }
 

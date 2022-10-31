@@ -1,7 +1,7 @@
 package fr.rader.imbob.psl.packets.definition.rules;
 
 import fr.rader.imbob.psl.tokens.TokenType;
-import fr.rader.imbob.Logger;
+import fr.rader.imbob.windows.impl.LoggerWindow;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,7 +51,7 @@ public class ConditionRule extends Rule {
                 return value != valueToCheck;
 
             default:
-                Logger.getInstance().error("Unexpected comparison");
+                LoggerWindow.error("Unexpected comparison");
                 return false;
         }
     }

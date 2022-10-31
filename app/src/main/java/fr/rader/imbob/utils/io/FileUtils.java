@@ -3,11 +3,9 @@ package fr.rader.imbob.utils.io;
 import java.io.File;
 import java.io.IOException;
 
-import fr.rader.imbob.Logger;
+import fr.rader.imbob.windows.impl.LoggerWindow;
 
 public class FileUtils {
-
-    private static final Logger logger = Logger.getInstance();
 
     /**
      * Create a file
@@ -30,15 +28,15 @@ public class FileUtils {
      * @throws IOException If an I/O error occurs
      */
     public static File makeFile(File file, boolean overwrite) {
-        logger.info("Creating file " + file.getAbsolutePath());
+        LoggerWindow.info("Creating file " + file.getAbsolutePath());
 
         // deleting the file if it already exists
         if (overwrite) {
             if (file.exists()) {
-                logger.info(file.getAbsolutePath() + " already exists, deleting it");
+                LoggerWindow.info(file.getAbsolutePath() + " already exists, deleting it");
 
                 if (!file.delete()) {
-                    logger.error("Couldn't delete " + file.getAbsolutePath());
+                    LoggerWindow.error("Couldn't delete " + file.getAbsolutePath());
                     return null;
                 }
             }

@@ -2,13 +2,11 @@ package fr.rader.imbob.utils.errors;
 
 import fr.rader.imbob.utils.LineReader;
 import fr.rader.imbob.utils.StringUtils;
-import fr.rader.imbob.Logger;
+import fr.rader.imbob.windows.impl.LoggerWindow;
 
 import java.io.File;
 
 public class ErrorPrinter {
-
-    private static final Logger logger = Logger.getInstance();
 
     /**
      * Print a nice error message to the user
@@ -94,8 +92,8 @@ public class ErrorPrinter {
      * @param solutions the possible solution(s) to fix the issue
      */
     public static void printError(File file, int line, int start, int size, String errorID, String errorMessage, String[] solutions) {
-        logger.error("Error " + errorID + ":");
-        logger.error("");
+        LoggerWindow.error("Error " + errorID + ":");
+        LoggerWindow.error("");
 
         // if we give a file to this method,
         // we'll use it to print the line
@@ -108,7 +106,7 @@ public class ErrorPrinter {
                 return;
             }
 
-            logger.error(line + ":  " + lineWithError.trim());
+            LoggerWindow.error(line + ":  " + lineWithError.trim());
 
             // we check if we have to underline it
             if (start != 0 && size != 0) {
@@ -125,7 +123,7 @@ public class ErrorPrinter {
                 }
 
                 // we print the underline
-                logger.error(underline.toString());
+                LoggerWindow.error(underline.toString());
             }
         }
 
@@ -136,17 +134,17 @@ public class ErrorPrinter {
         }
 
         // and we print it
-        logger.error(error + "> " + errorMessage);
+        LoggerWindow.error(error + "> " + errorMessage);
 
         // if the solutions array isn't empty,
         // we print the solutions
         if (!solutions[0].isEmpty()) {
-            logger.error("");
-            logger.error("Suggestion" + (solutions.length > 1 ? "s" : "") + ":");
+            LoggerWindow.error("");
+            LoggerWindow.error("Suggestion" + (solutions.length > 1 ? "s" : "") + ":");
 
             // print each solutions
             for (String solution : solutions) {
-                logger.error("    > " + solution);
+                LoggerWindow.error("    > " + solution);
             }
         }
     }

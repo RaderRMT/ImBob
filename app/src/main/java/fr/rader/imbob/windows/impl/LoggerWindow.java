@@ -1,4 +1,4 @@
-package fr.rader.imbob;
+package fr.rader.imbob.windows.impl;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -9,13 +9,16 @@ import java.util.List;
 
 import fr.rader.imbob.utils.DateUtils;
 import fr.rader.imbob.utils.OS;
+import fr.rader.imbob.utils.StringUtils;
 import fr.rader.imbob.utils.io.FileUtils;
+import fr.rader.imbob.windows.AbstractWindow;
 import imgui.ImGui;
 import imgui.ImVec4;
+import imgui.flag.ImGuiCol;
 import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImString;
 
-public class Logger {
+public class LoggerWindow extends AbstractWindow {
 
     /** DateTime patterns */
     private static final String DATETIME_LOG_PATTERN = "[yyyy-MM-dd] [HH:mm:ss]";
@@ -27,10 +30,7 @@ public class Logger {
     /** Path to the current log */
     private static final String CURRENT_LOG = LOG_PATH + DateUtils.getFormattedDate(DATETIME_FILE_PATTERN) + ".log";
 
-    private static Logger instance;
-
-    private static int firstColumnSpacing = 50;
-    private static int secondColumnSpacing = 120;
+    private static LoggerWindow instance;
 
     private final List<LogItem> logItems;
 
@@ -38,12 +38,10 @@ public class Logger {
 
     private FileWriter writer;
 
-    /**
-     * This constructs a new Logger.
-     * It is package private because we don't
-     * want to create a new instance of this class
-    */
-    Logger() {
+    private int firstColumnSpacing = 50;
+    private int secondColumnSpacing = 120;
+
+    public LoggerWindow() {
         instance = this;
 
         this.logItems = new ArrayList<>();
@@ -59,103 +57,99 @@ public class Logger {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        setWindowName("Logs");
+        setWindowFlags(ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove);
     }
 
-    /**
-     * This is the logger's render method.<br>
-     * It is package private because we only
-     * need to call it in the main class' process method.
-    */
-    void render(float menuBarHeight) {
+    @Override
+    protected void preRender(float menuBarHeight) {
         ImGui.setNextWindowSize(535, 150);
         ImGui.setNextWindowPos(0, menuBarHeight + 225);
+    }
 
-        // we create the logger window
-        if (ImGui.begin("Logs", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove)) {
-            // we add a clear button, so we
-            // can clear the logs
-            if (ImGui.button("Clear")) {
-                this.logItems.clear();
-            }
-
-            ImGui.sameLine();
-            // we add a 150px input field
-            // so we can look for specific
-            // things in the logs
-            ImGui.pushItemWidth(150);
-            ImGui.inputText("Search", this.searchString);
-            ImGui.popItemWidth();
-
-            ImGui.separator();
-            // we create a new child, so we can
-            // scroll only the log items
-            ImGui.beginChild("ScrollingRegion");
-            
-            // set 3 columns:
-            //   one for the verbosity
-            //   one for the class name
-            //   one for the log message
-            ImGui.columns(3);
-
-            // this is kinda a hack, we only want
-            // to set the column width once.
-            if (firstColumnSpacing > 0) {
-                ImGui.setColumnWidth(0, firstColumnSpacing);
-                firstColumnSpacing = 0;
-            }
-
-            // we do the same hack here
-            if (secondColumnSpacing > 0) {
-                ImGui.setColumnWidth(1, secondColumnSpacing);
-                secondColumnSpacing = 0;
-            }
-
-            // we loop through each log items
-            Iterator<LogItem> iterator = this.logItems.iterator();
-            while (iterator.hasNext()) {
-                LogItem item = iterator.next();
-
-                // skip the item if it doesn't
-                // contain what we're looking for
-                if (!item.getMessage().toLowerCase().contains(this.searchString.get().toLowerCase())) {
-                    continue;
-                }
-
-                // we get the color for each message
-                ImVec4 color = item.getVerbosity().getColor();
-
-                // we push the color
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, color.x, color.y, color.z, color.w);
-                // we write the leve
-                ImGui.textUnformatted(item.getVerbosity().getLevel());
-                ImGui.nextColumn();
-                // we write the class name
-                ImGui.textUnformatted(item.getClassName());
-                ImGui.nextColumn();
-                // we write the message
-                ImGui.textUnformatted(item.getMessage());
-                ImGui.nextColumn();
-
-                // we pop the color, unless we want
-                // every text to have a different color
-                ImGui.popStyleColor();
-            }
-
-            // we reset the columns count to 1
-            ImGui.columns(1);
-            // and scroll to the bottom if a new log entry
-            // has been added, and if we're at the bottom
-            // of the log scroller
-            if (ImGui.getScrollY() >= ImGui.getScrollMaxY()) {
-                ImGui.setScrollHereY(1);
-            }
-
-            // we end the scrolling region
-            ImGui.endChild();
+    @Override
+    protected void renderContent() {
+        // we add a clear button, so we
+        // can clear the logs
+        if (ImGui.button("Clear")) {
+            this.logItems.clear();
         }
 
-        // we end the window, as ImGui is stack based
-        ImGui.end();
+        ImGui.sameLine();
+        // we add a 150px input field
+        // so we can look for specific
+        // things in the logs
+        ImGui.pushItemWidth(150);
+        ImGui.inputText("Search", this.searchString);
+        ImGui.popItemWidth();
+
+        ImGui.separator();
+        // we create a new child, so we can
+        // scroll only the log items
+        ImGui.beginChild("ScrollingRegion");
+        
+        // set 3 columns:
+        //   one for the verbosity
+        //   one for the class name
+        //   one for the log message
+        ImGui.columns(3);
+
+        // this is kinda a hack, we only want
+        // to set the column width once.
+        if (this.firstColumnSpacing > 0) {
+            ImGui.setColumnWidth(0, this.firstColumnSpacing);
+            this.firstColumnSpacing = 0;
+        }
+
+        // we do the same hack here
+        if (this.secondColumnSpacing > 0) {
+            ImGui.setColumnWidth(1, this.secondColumnSpacing);
+            this.secondColumnSpacing = 0;
+        }
+
+        // we loop through each log items
+        Iterator<LogItem> iterator = this.logItems.iterator();
+        while (iterator.hasNext()) {
+            LogItem item = iterator.next();
+
+            // skip the item if it doesn't
+            // contain what we're looking for
+            if (!StringUtils.containsIgnoreCase(item.getMessage(), this.searchString.get())) {
+                continue;
+            }
+
+            // we get the color for each message
+            ImVec4 color = item.getVerbosity().getColor();
+
+            // we push the color
+            ImGui.pushStyleColor(ImGuiCol.Text, color.x, color.y, color.z, color.w);
+            // we write the leve
+            ImGui.textUnformatted(item.getVerbosity().getLevel());
+            ImGui.nextColumn();
+            // we write the class name
+            ImGui.textUnformatted(item.getClassName());
+            ImGui.nextColumn();
+            // we write the message
+            ImGui.textUnformatted(item.getMessage());
+            ImGui.nextColumn();
+
+            // we pop the color, unless we want
+            // every text to have a different color
+            ImGui.popStyleColor();
+        }
+
+        // we reset the columns count to 1
+        ImGui.columns(1);
+        // and scroll to the bottom if a new log entry
+        // has been added, and if we're at the bottom
+        // of the log scroller
+        if (ImGui.getScrollY() >= ImGui.getScrollMaxY()) {
+            ImGui.setScrollHereY(1);
+        }
+
+        // we end the scrolling region
+        ImGui.endChild();
     }
 
     /**
@@ -164,11 +158,11 @@ public class Logger {
      * @param className The class that called the method
      * @param message   The log message
     */
-    public void error(String message) {
+    public static void error(String message) {
         String callee = Thread.currentThread().getStackTrace()[2].getClassName();
         callee = callee.substring(callee.lastIndexOf('.') + 1);
 
-        log(
+        instance.log(
                 Verbosity.ERROR,
                 callee,
                 message
@@ -181,11 +175,11 @@ public class Logger {
      * @param className The class that called the method
      * @param message   The log message
     */
-    public void warn(String message) {
+    public static void warn(String message) {
         String callee = Thread.currentThread().getStackTrace()[2].getClassName();
         callee = callee.substring(callee.lastIndexOf('.') + 1);
 
-        log(
+        instance.log(
                 Verbosity.WARN,
                 callee,
                 message
@@ -198,11 +192,11 @@ public class Logger {
      * @param className The class that called the method
      * @param message   The log message
     */
-    public void info(String message) {
+    public static void info(String message) {
         String callee = Thread.currentThread().getStackTrace()[2].getClassName();
         callee = callee.substring(callee.lastIndexOf('.') + 1);
 
-        log(
+        instance.log(
                 Verbosity.INFO,
                 callee,
                 message
@@ -242,15 +236,6 @@ public class Logger {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    /**
-     * This just returns the logger's instance, so we only need one logger.
-     *
-     * @return The logger's instance
-    */
-    public static Logger getInstance() {
-        return instance;
     }
 
     private static class Verbosity {

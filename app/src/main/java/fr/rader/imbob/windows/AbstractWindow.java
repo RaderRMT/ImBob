@@ -31,6 +31,14 @@ public abstract class AbstractWindow {
     private final ImBoolean windowOpen;
 
     /**
+     * This is the class that keeps track of
+     * all windows we can see on the screen.
+     * We keep track of it because we might want
+     * to get some windows and do stuff with them
+     */
+    private WindowManager windowManager;
+
+    /**
      * This constructor is protected as we
      * don't want to create a new instance of this
      * class without having it begin extended by
@@ -47,6 +55,28 @@ public abstract class AbstractWindow {
 
         // by default, the window is open
         this.windowOpen = new ImBoolean(true);
+    }
+
+    /**
+     * Set this windows' {@link WindowManager} only if there isn't one set.
+     * This is to prevent someone from accidently removing the window manager from a window.
+     *
+     * @param windowManager     The window manager to set
+     */
+    public void setWindowManager(WindowManager windowManager) {
+        // we only set the window manager if the window has no managers
+        if (this.windowManager != null) {
+            return;
+        }
+
+        this.windowManager = windowManager;
+    }
+
+    /**
+     * This method is called after the class
+     * has been instantiated by the {@link WindowManager} class.
+     */
+    public void init() {
     }
 
     /**
@@ -104,6 +134,10 @@ public abstract class AbstractWindow {
         ImGui.end();
 
         postRender();
+    }
+
+    protected WindowManager getWindowManager() {
+        return this.windowManager;
     }
 
     public String getWindowName() {

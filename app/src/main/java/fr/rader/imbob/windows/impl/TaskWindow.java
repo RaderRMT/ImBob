@@ -30,6 +30,11 @@ public class TaskWindow extends AbstractWindow {
     }
 
     @Override
+    public void init() {
+        this.taskListWindow = getWindowManager().getWindowByClass(TaskListWindow.class);
+    }
+
+    @Override
     protected void preRender(float menuBarHeight) {
         ImGui.setNextWindowSize(288, 226);
         ImGui.setNextWindowPos(247, menuBarHeight);
@@ -69,9 +74,5 @@ public class TaskWindow extends AbstractWindow {
 
         // and we render the task's content
         selectedTask.render();
-    }
-
-    public void setTaskListWindowReference(TaskListWindow taskListWindow) {
-        this.taskListWindow = taskListWindow;
     }
 }
