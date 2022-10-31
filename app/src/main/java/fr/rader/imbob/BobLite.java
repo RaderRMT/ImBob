@@ -50,7 +50,7 @@ public class BobLite extends Application {
     @Override
     protected void initWindow(Configuration config) {
         // we change the window title
-        config.setTitle("Bob Lite");
+        config.setTitle("ImBob");
         // we set the window size
         config.setWidth(WINDOW_WIDTH);
         config.setHeight(WINDOW_HEIGHT);
