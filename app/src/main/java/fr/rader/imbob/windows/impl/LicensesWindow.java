@@ -19,7 +19,7 @@ public class LicensesWindow extends AbstractWindow {
         this.dependencies.add(new Pair<String, License>("gson", License.APACHE_2));
         this.dependencies.add(new Pair<String, License>("imgui-java", License.APACHE_2));
 
-        this.columnSpacing = 100;
+        this.columnSpacing = 90;
 
         setWindowFlags(ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove);
         setVisible(false);
@@ -61,7 +61,7 @@ public class LicensesWindow extends AbstractWindow {
 
     private static enum License {
 
-        APACHE_2("Apache 2.0", "https://opensource.org/licenses/Apache-2.0");
+        APACHE_2("Apache 2.0", "https://www.apache.org/licenses/LICENSE-2.0.html");
 
         private final String name;
         private final String link;
