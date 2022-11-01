@@ -109,7 +109,7 @@ public class LoggerWindow extends AbstractWindow {
         }
 
         // we loop through each log items
-        Iterator<LogItem> iterator = this.logItems.iterator();
+        Iterator<LogItem> iterator = new ArrayList<>(this.logItems).iterator();
         while (iterator.hasNext()) {
             LogItem item = iterator.next();
 
