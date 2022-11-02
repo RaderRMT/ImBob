@@ -42,8 +42,9 @@ public class TimeChangerTask extends AbstractTask {
         switch (packet.getPacketName()) {
             case "time_update":
                 // changing the time just means we need to change the time of day entry
-                VariableEntry timeOfDay = packet.getEntry("time_of_day").getAs(VariableEntry.class);
-                timeOfDay.setValue(newTimeOfDay);
+                packet.getEntry("time_of_day")
+                      .getAs(VariableEntry.class)
+                      .setValue(newTimeOfDay);
                 break;
 
             case "join_game":
@@ -79,6 +80,6 @@ public class TimeChangerTask extends AbstractTask {
         ImGui.pushItemWidth(150);
         ImGui.inputInt("Time Of Day", this.timeOfDay);
         ImGui.popItemWidth();
-        ImGui.text("This uses the same values\nas the \"/time set\" command");
+        ImGui.text("This uses the same value\nas the \"/time set\" command");
     }
 }
