@@ -67,7 +67,11 @@ public class Packet {
     }
 
     public List<PacketEntry> getEntries() {
-        return entries;
+        return this.entries;
+    }
+
+    public boolean isEmpty() {
+        return this.entries.isEmpty();
     }
     
     /**
@@ -76,7 +80,19 @@ public class Packet {
      *
      * @return  The cloned packet
      */
-    public Packet clone() {
+    public Packet cloneEmpty() {
         return new Packet(this.protocolVersion, this.packetId);
+    }
+
+    /**
+     * Clones this {@link Packet}.
+     *
+     * @return  The cloned packet
+     */
+    public Packet clone() {
+        Packet clonedPacket = cloneEmpty();
+        clonedPacket.setEntry(this.getEntries());
+
+        return clonedPacket;
     }
 }

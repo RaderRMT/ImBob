@@ -66,8 +66,8 @@ public class WeatherChangerTask extends AbstractTask {
             beginRainPacket.addEntry(new VariableEntry("reason", BEGIN_RAIN));
             beginRainPacket.addEntry(new VariableEntry("value", 0f));
 
-            // cloning a packet doesn't clone it's entries
-            Packet setRainLevelPacket = beginRainPacket.clone();
+            // we clone an empty version of the beginRainPacket packet
+            Packet setRainLevelPacket = beginRainPacket.cloneEmpty();
             // we add the Rain Level Change reason, with a 1f value.
             // 1f means the rain is at it's full intensity.
             setRainLevelPacket.addEntry(new VariableEntry("reason", RAIN_LEVEL_CHANGE));
@@ -80,7 +80,7 @@ public class WeatherChangerTask extends AbstractTask {
             // if the user wants to change the weather to thunder, we just create
             // a third Change Game State packet and set the thunder level to 1f
             if (newWeather.equals("Thunder")) {
-                Packet setThunderLevelPacket = beginRainPacket.clone();
+                Packet setThunderLevelPacket = beginRainPacket.cloneEmpty();
                 setThunderLevelPacket.addEntry(new VariableEntry("reason", THUNDER_LEVEL_CHANGE));
                 setThunderLevelPacket.addEntry(new VariableEntry("value", 1f));
 

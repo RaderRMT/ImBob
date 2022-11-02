@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Queue;
 
 import fr.rader.imbob.packets.Packet;
+import fr.rader.imbob.protocol.ProtocolVersion;
 import fr.rader.imbob.psl.packets.definition.PacketDefinition;
 import fr.rader.imbob.psl.packets.definition.PacketDefinitionFactory;
 import fr.rader.imbob.psl.packets.serialization.PacketDeserializer;
@@ -113,12 +114,15 @@ public class TaskExecutor {
             // multiple packets to be added in the recording
             Queue<Packet> packets = new LinkedList<>();
 
+            // we get the protocol version from the replay metadata
+            ProtocolVersion protocolVersion = metaData.getProtocol();
+
             // we read the replayReader until we're at the end of the recording
             while (replayReader.getLength() != 0) {
                 // we get the packet timestamp
-                int timestamp   = replayReader.readInt();
+                int timestamp = replayReader.readInt();
                 // we get the packet size
-                int packetSize  = replayReader.readInt();
+                int packetSize = replayReader.readInt();
                 // and we get the packet id
                 VarInt packetId = replayReader.readVarInt();
 
@@ -129,79 +133,63 @@ public class TaskExecutor {
 
                 // we create an empty packet that only contains the protocol version and the packet id.
                 // each task will then get the packet and see if they can edit it based on those 2 values.
-                Packet packet = new Packet(metaData.getProtocol(), packetId);
+                Packet packet = new Packet(protocolVersion, packetId);
                 // we loop through all the tasks
                 for (AbstractTask task : this.tasks) {
-                    // we look if the task accepts the packet
-                    if (task.accept(packet)) {
-                        // if the task accepts the packet, we see if the packet definition has already been created.
-                        // this is to avoid having to create a new packet definition for the same packet multiple times
-                        if (!this.packetDefinitions.containsKey(packetId.getValue())) {
-                            // if the packet definition doesn't exist, we create a new one
-                            this.packetDefinitions.put(
-                                    packetId.getValue(),
-                                    PacketDefinitionFactory.createPacketDefinition(
-                                        metaData.getProtocol(),
-                                        packetId
-                                    )
-                            );
-                        }
+                    // we ignore the packet if it's not accepted
+                    if (!task.accept(packet)) {
+                        continue;
+                    }
 
-                        // we get the packet definition from the list
-                        PacketDefinition definition = this.packetDefinitions.get(packetId.getValue());
+                    // we fill the packet only if it is empty.
+                    // this prevents us from reading garbage data if
+                    // at least two tasks are used at once
+                    if (packet.isEmpty()) {
+                        // we get the packet definition for the packet we want to edit
+                        PacketDefinition definition = getPacketDefinition(protocolVersion, packetId);
                         // and we deserialize the packet
-                        packet = deserializer.deserialize(definition, packet);
-                        
-                        // we add the packet we want to edit
-                        packets.add(packet);
-                        // we execute the task.
-                        // we peek the packet in the queue because we want
-                        // to edit the packet contained in the queue
-                        task.execute(packets.peek(), packets);
+                        deserializer.deserialize(definition, packet);
+                    }
 
-                        // we loop through each packet we want to add in the replay.
-                        // the queue can be empty or contain more than one packet.
-                        while (!packets.isEmpty()) {
-                            // we get the head of the queue
-                            Packet packetToWrite = packets.poll();
-                            VarInt packetIdToWrite = packetToWrite.getPacketId();
-                            // we create the packet definition if it doesn't exist yet
-                            if (!this.packetDefinitions.containsKey(packetIdToWrite.getValue())) {
-                                // if the packet definition doesn't exist, we create a new one
-                                this.packetDefinitions.put(
-                                        packetIdToWrite.getValue(),
-                                        PacketDefinitionFactory.createPacketDefinition(
-                                            metaData.getProtocol(),
-                                            packetIdToWrite
-                                        )
-                                );
-                            }
+                    // we create a clone of the packet because we don't
+                    // want to do edits based on a packet that
+                    // might've been edited by a previous task.
+                    // we then add that cloned packet to the packets queue
+                    packets.add(packet.clone());
+                    // we execute the task.
+                    // we peek the packet in the queue because we want
+                    // to edit the packet contained in the queue
+                    task.execute(packets.peek(), packets);
 
-                            // we get the packet definition from the list
-                            definition = this.packetDefinitions.get(packetIdToWrite.getValue());
-                            // we serialize the ticket back to a list of bytes
-                            serializer.serialize(definition, packetToWrite);
-                            // we get the serialized packet
-                            List<Byte> data = serializer.getData();
+                    // we loop through each packet we want to add in the replay.
+                    // the queue can be empty or contain more than one packet.
+                    while (!packets.isEmpty()) {
+                        // we get the head of the queue
+                        Packet packetToWrite = packets.poll();
+                        VarInt packetIdToWrite = packetToWrite.getPacketId();
 
-                            // we write the timestamp to the data writer
-                            writer.writeInt(timestamp);
-                            // and we write all the data, so the size of the packet data
-                            // + the size of the packet id, giving us the size of the entire packet
-                            writer.writeInt(data.size() + packetIdToWrite.size());
-                            // then we write the packet id
-                            writer.writeVarInt(packetIdToWrite.getValue());
-                            // and finally we write the packet data before breaking from our loop
-                            writer.writeByteArray(ListUtils.toByteArray(data));
-                        }
+                        // we get the packet definition
+                        PacketDefinition definition = getPacketDefinition(protocolVersion, packetIdToWrite);
+                        // we serialize the packet back to a list of bytes
+                        serializer.serialize(definition, packetToWrite);
+                        // we get the serialized packet
+                        List<Byte> data = serializer.getData();
 
-                        break;
+                        // we write the timestamp to the data writer
+                        writer.writeInt(timestamp);
+                        // and we write all the data, so the size of the packet data
+                        // + the size of the packet id, giving us the size of the entire packet
+                        writer.writeInt(data.size() + packetIdToWrite.size());
+                        // then we write the packet id
+                        writer.writeVarInt(packetIdToWrite.getValue());
+                        // and finally we write the packet data
+                        writer.writeByteArray(ListUtils.toByteArray(data));
                     }
                 }
 
                 // we check if the packet has no entries so
                 // we don't write it twice after editing it
-                if (packet.getEntries().size() == 0) {
+                if (packet.isEmpty()) {
                     // if the packet has no entries, this means it hasn't been accepted by a task.
                     // we just have to rewrite its timestamp, packet size, id and data
                     writer.writeInt(timestamp);
@@ -234,5 +222,32 @@ public class TaskExecutor {
             // and once everything is done, we reset the progress bar to 0
             this.progressBar.setProgress(0f);
         }
+    }
+
+    /**
+     * Get or create a {@link PacketDefinition} based on the given {@link ProtocolVersion},
+     * packet id and the current state of the packetDefinitions list.
+     *
+     * @param version   The replay {@link ProtocolVersion}
+     * @param packetId  The packet id
+     * @return          The {@link PacketDefinition} from the packetDefinitions list,
+     *                  or a new {@link PacketDefinition} if it isn't contained in the list
+     * @throws IOException If an I/O error occurs
+     */
+    private PacketDefinition getPacketDefinition(ProtocolVersion version, VarInt packetId) throws IOException {
+        // we create a new packet definition if the list
+        // doesn't contain the wanted packet definition
+        if (!this.packetDefinitions.containsKey(packetId.getValue())) {
+            this.packetDefinitions.put(
+                    packetId.getValue(),
+                    PacketDefinitionFactory.createPacketDefinition(
+                            version,
+                            packetId
+                    )
+            );
+        }
+
+        // we return the packet definition from the list
+        return this.packetDefinitions.get(packetId.getValue());
     }
 }
