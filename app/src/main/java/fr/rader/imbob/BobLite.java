@@ -12,8 +12,7 @@ public class BobLite extends Application {
 
     private static final int WINDOW_WIDTH = 535;
     private static final int WINDOW_HEIGHT = 375;
-
-    private boolean isWindowResized = false;
+    private static final int MENU_BAR_HEIGHT = 18;
 
     private final WindowManager windowManager;
 
@@ -28,7 +27,7 @@ public class BobLite extends Application {
         config.setTitle("ImBob");
         // we set the window size
         config.setWidth(WINDOW_WIDTH);
-        config.setHeight(WINDOW_HEIGHT);
+        config.setHeight(WINDOW_HEIGHT + MENU_BAR_HEIGHT);
 
         // and we initialize the window
         super.initWindow(config);
@@ -52,12 +51,6 @@ public class BobLite extends Application {
     @Override
     public void process() {
         ImGui.beginMainMenuBar();
-        float menuBarHeight = ImGui.getWindowSizeY();
-
-        if (!this.isWindowResized) {
-            GLFW.glfwSetWindowSize(getHandle(), WINDOW_WIDTH, WINDOW_HEIGHT + (int) menuBarHeight);
-            this.isWindowResized = true;
-        }
 
         if (ImGui.beginMenu("Menu")) {
             if (ImGui.menuItem("Licenses")) {
@@ -70,7 +63,7 @@ public class BobLite extends Application {
         ImGui.endMainMenuBar();
 
         // we render all the windows
-        this.windowManager.renderAll(menuBarHeight);
+        this.windowManager.renderAll(MENU_BAR_HEIGHT);
     }
 
     void start() {
