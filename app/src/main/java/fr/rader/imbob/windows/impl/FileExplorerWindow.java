@@ -227,7 +227,7 @@ public class FileExplorerWindow extends AbstractWindow {
             public boolean accept(File file) {
                 // we keep the file if it is a directory
                 if (file.isDirectory()) {
-                    return true;
+                    return file.list() != null;
                 }
 
                 // we keep the file if no specific extension is required
