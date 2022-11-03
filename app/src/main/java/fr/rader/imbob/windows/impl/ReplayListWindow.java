@@ -113,7 +113,7 @@ public class ReplayListWindow extends AbstractWindow {
         // have at least one replay in the replay list
         if (ImGui.button("Edit Selected") && this.replays.size() > 0) {
             // then we move the selected replay to
-            // the boblite folder and we edit it
+            // the imbob folder and we edit it
             moveAndEditReplays(this.replays.get(this.selectedReplay.get()));
         }
 
@@ -123,37 +123,37 @@ public class ReplayListWindow extends AbstractWindow {
         // have at least one replay in the replay list
         if (ImGui.button("Edit All") && this.replays.size() > 0) {
             // then we move the replays to
-            // the boblite folder and we edit them
+            // the imbob folder and we edit them
             moveAndEditReplays(this.replays.toArray(new File[0]));
         }
     }
 
     /**
      * Move the replays given as the first parameter to
-     * the {@link OS#getBobLiteFolder()} folder and edit them.
+     * the {@link OS#getImBobFolder()} folder and edit them.
      * This will apply all the tasks contained in the {@link TaskListWindow}'s task list
      *
      * @param replays   The list of replays to edit.
      */
     private void moveAndEditReplays(File... replays) {
         // we create a list of file, this will be the replays
-        // to edit in the boblite folder
+        // to edit in the imbob folder
         List<File> replaysToEdit = new ArrayList<>();
 
         // we loop through each replay so we can move them
         for (File replay : replays) {
-            // we create the file in the boblite folder
-            File replayCopy = new File(OS.getBobLiteFolder() + replay.getName());
+            // we create the file in the imbob folder
+            File replayCopy = new File(OS.getImBobFolder() + replay.getName());
 
             try {
-                // we copy the replay file to the boblite folder
+                // we copy the replay file to the imbob folder
                 Files.copy(
                         replay.toPath(),
                         replayCopy.toPath(),
                         StandardCopyOption.REPLACE_EXISTING
                 );
 
-                // and we add the file from the boblite folder to
+                // and we add the file from the imbob folder to
                 // the replaysToEdit list so we can edit those and not the original replays
                 replaysToEdit.add(replayCopy);
             } catch (IOException e) {

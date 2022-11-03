@@ -8,7 +8,7 @@ import imgui.ImGui;
 import imgui.app.Application;
 import imgui.app.Configuration;
 
-public class BobLite extends Application {
+public class ImBob extends Application {
 
     private static final int WINDOW_WIDTH = 535;
     private static final int WINDOW_HEIGHT = 375;
@@ -16,7 +16,7 @@ public class BobLite extends Application {
 
     private final WindowManager windowManager;
 
-    BobLite() {
+    ImBob() {
         this.windowManager = new WindowManager();
         this.windowManager.initializeAllWindows();
     }

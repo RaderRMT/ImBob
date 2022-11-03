@@ -25,7 +25,7 @@ public class LoggerWindow extends AbstractWindow {
     private static final String DATETIME_FILE_PATTERN = "yyyy-MM-dd_HH-mm-ss";
 
     /** Path to the main logs folder */
-    private static final String LOG_PATH = OS.getBobLiteFolder() + "logs/";
+    private static final String LOG_PATH = OS.getImBobFolder() + "logs/";
 
     /** Path to the current log */
     private static final String CURRENT_LOG = LOG_PATH + DateUtils.getFormattedDate(DATETIME_FILE_PATTERN) + ".log";

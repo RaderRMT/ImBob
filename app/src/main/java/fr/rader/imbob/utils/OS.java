@@ -8,8 +8,8 @@ public class OS {
     private static final int MACOSX = 2;
     private static final int WINDOWS = 3;
 
-    public static String getBobLiteFolder() {
-        return System.getProperty("user.home").replace("\\", "/") + "/.boblite/";
+    public static String getImBobFolder() {
+        return System.getProperty("user.home").replace("\\", "/") + "/.imbob/";
     }
 
     public static boolean isWindows() {
