@@ -17,6 +17,8 @@ packet "join_game" {
     boolean "is_debug";
     boolean "is_flat";
     boolean "has_death_location";
-    string "death_dimension_name";
-    position "death_location";
+    if "has_death_location" {
+        string "death_dimension_name";
+        position "death_location";
+    }
 }
