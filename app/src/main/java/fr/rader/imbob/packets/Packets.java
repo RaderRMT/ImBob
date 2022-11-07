@@ -19,7 +19,6 @@ public enum Packets {
             pair(MC_1_15_2, 0x4F),
             pair(MC_1_16_5, 0x4E),
             pair(MC_1_17_1, 0x58),
-            pair(MC_1_18_2, 0x59),
             pair(MC_1_19,   0x59),
             pair(MC_1_19_2, 0x5C)
     ),
