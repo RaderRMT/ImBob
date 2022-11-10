@@ -44,6 +44,19 @@ public enum Packets {
             pair(MC_1_18_2, 0x1E),
             pair(MC_1_19,   0x1B),
             pair(MC_1_19_2, 0x1D)
+    ),
+
+    PLAYER_INFO(
+            pair(MC_1_8,    0x38),
+            pair(MC_1_12,   0x2D),
+            pair(MC_1_12_2, 0x2E),
+            pair(MC_1_14_4, 0x33),
+            pair(MC_1_15_2, 0x34),
+            pair(MC_1_16_1, 0x33),
+            pair(MC_1_16_5, 0x32),
+            pair(MC_1_18_2, 0x36),
+            pair(MC_1_19,   0x34),
+            pair(MC_1_19_2, 0x37)
     );
 
     private final Map<ProtocolVersion, Integer> versions;

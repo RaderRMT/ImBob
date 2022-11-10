@@ -5,6 +5,7 @@ import java.util.List;
 
 import fr.rader.imbob.tasks.AbstractTask;
 import fr.rader.imbob.tasks.impl.TimeChangerTask;
+import fr.rader.imbob.tasks.impl.UsernameChangerTask;
 import fr.rader.imbob.tasks.impl.WeatherChangerTask;
 import fr.rader.imbob.windows.AbstractWindow;
 import imgui.ImGui;
@@ -19,7 +20,8 @@ public class TaskWindow extends AbstractWindow {
 
     private static final List<AbstractTask> TASKS = Arrays.asList(
             new TimeChangerTask(),
-            new WeatherChangerTask()
+            new WeatherChangerTask(),
+            new UsernameChangerTask()
     );
 
     public TaskWindow() {
