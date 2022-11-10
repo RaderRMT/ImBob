@@ -206,7 +206,7 @@ public class Validator {
         // this name is the variable's name
         expect(line, NAME);
         // then we check if the variable already exists
-        if (isSourceValid && variableExists(variableName)) {
+        if (isSourceValid && isVariableDeclaredInCurrentScope(variableName)) {
             // if the variable already exists,
             // we throw an error
             Error error = Error.A16;
@@ -513,6 +513,10 @@ public class Validator {
             // the source is not valid
             isSourceValid = false;
         }
+    }
+
+    private boolean isVariableDeclaredInCurrentScope(Token token) {
+        return this.variables.peek().containsKey(token.getValue());
     }
 
     /**
