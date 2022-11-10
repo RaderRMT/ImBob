@@ -31,6 +31,16 @@ public class MatchEntry extends PacketEntry {
         this.value = value;
     }
 
+    public PacketEntry getEntry(String name) {
+        for (PacketEntry entry : this.entries) {
+            if (entry.getName().equals(name)) {
+                return entry;
+            }
+        }
+
+        return null;
+    }
+
     @Override
     public String toString() {
         return "MatchEntry{" +
