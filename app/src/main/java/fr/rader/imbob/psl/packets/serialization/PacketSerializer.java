@@ -4,142 +4,178 @@ import fr.rader.imbob.packets.Packet;
 import fr.rader.imbob.protocol.ProtocolVersion;
 import fr.rader.imbob.psl.packets.definition.PacketDefinition;
 import fr.rader.imbob.psl.packets.definition.rules.*;
-import fr.rader.imbob.psl.packets.serialization.entries.*;
+import fr.rader.imbob.psl.packets.serialization.entries.ArrayEntry;
+import fr.rader.imbob.psl.packets.serialization.entries.PacketEntry;
+import fr.rader.imbob.psl.packets.serialization.entries.SimpleArrayEntry;
+import fr.rader.imbob.psl.packets.serialization.entries.VariableEntry;
+import fr.rader.imbob.psl.packets.serialization.utils.EntryList;
 import fr.rader.imbob.psl.tokens.TokenType;
+import fr.rader.imbob.types.VarInt;
 import fr.rader.imbob.utils.data.DataWriter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Stack;
 
 public class PacketSerializer {
+
+    private final Stack<EntryList> scope;
 
     private final DataWriter writer;
 
     private ProtocolVersion protocolVersion;
 
+    private int offset;
+
     public PacketSerializer() throws IOException {
         this.writer = new DataWriter(false);
+        this.scope = new Stack<>();
     }
 
-    /**
-     * Serialize a {@link Packet} object to a {@link DataWriter} based on the {@link PacketDefinition}
-     *
-     * @param definition the packet's definition.
-     *                   It contains instructions on how to read and write a specific packet
-     * @param packet the packet to write
-     */
     public void serialize(PacketDefinition definition, Packet packet) {
         this.writer.getData().clear();
         this.protocolVersion = packet.getProtocolVersion();
-        serializeBlock(definition.getRules(), packet.getEntries());
+        this.offset = 0;
+
+        serializeBlock(
+                definition.getRules(),
+                packet.getEntries()
+        );
     }
 
-    /**
-     * Serialize a list of {@link PacketEntry} to a {@link DataWriter} depending on a list of {@link Rule}
-     *
-     * @param rules the rules to serialize the entries
-     * @param entries the entries to serialize
-     */
-    private void serializeBlock(List<Rule> rules, List<PacketEntry> entries) {
-        // we loop through each rules
-        for (int i = 0; i < rules.size(); i++) {
-            // we get both the rule and the entry
+    private void serializeBlock(List<Rule> rules, EntryList entries) {
+        this.scope.push(entries);
+
+        for (int i = 0; i < rules.size() && this.offset < entries.size(); i++) {
             Rule rule = rules.get(i);
-            PacketEntry entry = entries.get(i);
+            PacketEntry entry = entries.get(this.offset);
 
-            // then we check the type of the entry.
-            // if the entry is a variable entry
-            if (entry instanceof VariableEntry) {
-                // we write the variable to the data writer
+            if (entry == null) {
+                throw new IllegalStateException("Missing entry for rule " + rule);
+            }
+
+            if (rule instanceof VariableRule) {
                 serializeVariable(
-                        (VariableRule) rule,
-                        (VariableEntry) entry
+                        rule.getAs(VariableRule.class),
+                        entry.getAs(VariableEntry.class)
                 );
             }
 
-            // if the entry is an array entry
-            if (entry instanceof ArrayEntry) {
-                // we get the entry as an ArrayEntry
-                // and the list of rules that defines
-                // how the array is defined
-                ArrayEntry arrayEntry = (ArrayEntry) entry;
-                List<Rule> arrayRules = ((ArrayRule) rule).getRules();
-
-                // then we loop through each entry in our array entry
-                for (int entryIndex = 0; entryIndex < arrayEntry.size(); entryIndex++) {
-                    // and we recursively call serializeBlock to
-                    // serialize the array
-                    serializeBlock(
-                            arrayRules,
-                            arrayEntry.getEntriesForIndex(entryIndex)
-                    );
-                }
-            }
-
-            // if the entry is a "simple array" entry
-            // (a.k.a. byte["length"] "name")
-            if (entry instanceof SimpleArrayEntry) {
-                SimpleArrayRule simpleArrayRule = (SimpleArrayRule) rule;
-                SimpleArrayEntry simpleArrayEntry = (SimpleArrayEntry) entry;
-
-                // we loop through each variable in the array
-                for (VariableEntry variableEntry : simpleArrayEntry.getVariables()) {
-                    // and we serialize it
-                    serializeVariable(
-                            simpleArrayRule.getType(),
-                            variableEntry
-                    );
-                }
-            }
-
-            // if the entry is a condition entry
-            if (entry instanceof ConditionEntry) {
-                // we get the entry as a condition entry
-                ConditionEntry conditionEntry = (ConditionEntry) entry;
-
-                // and we look if the entries list isn't empty.
-                // if it is, that means the condition wasn't met
-                // and there's nothing to write.
-                if (conditionEntry.getEntries().size() != 0) {
-                    // if the entries list isn't empty,
-                    // we serialize it
-                    serializeBlock(
-                            ((ConditionRule) rule).getBranchRules(),
-                            conditionEntry.getEntries()
-                    );
-                }
-            }
-
-            // if the entry is a match entry
-            if (entry instanceof MatchEntry) {
-                // we get the entry as a match entry
-                MatchEntry matchEntry = (MatchEntry) entry;
-
-                // and we serialize its content
-                serializeBlock(
-                        ((MatchRule) rule).getRulesForValue(matchEntry.getValue()),
-                        matchEntry.getEntries()
+            if (rule instanceof MatchRule) {
+                serializeMatch(
+                        rule.getAs(MatchRule.class),
+                        entries
                 );
             }
+
+            if (rule instanceof ArrayRule) {
+                serializeArray(
+                        rule.getAs(ArrayRule.class),
+                        entry.getAs(ArrayEntry.class)
+                );
+            }
+
+            if (rule instanceof SimpleArrayRule) {
+                serializeSimpleArray(
+                        rule.getAs(SimpleArrayRule.class),
+                        entry.getAs(SimpleArrayEntry.class)
+                );
+            }
+
+            if (rule instanceof ConditionRule) {
+                serializeCondition(
+                        rule.getAs(ConditionRule.class),
+                        entries
+                );
+            }
+
+            this.offset += 1;
         }
+
+        this.scope.pop();
     }
 
-    /**
-     * Serialize a {@link VariableEntry} based on the {@link VariableRule}
-     *
-     * @param rule the variable rule
-     * @param entry the variable entry to serialize
-     */
     private void serializeVariable(VariableRule rule, VariableEntry entry) {
         serializeVariable(rule.getType(), entry);
     }
 
+    private void serializeMatch(MatchRule rule, EntryList entries) {
+        int value = getValueFromVariable(getVariableFromScope(rule.getVariable()));
+
+        List<Rule> rules = rule.getRulesForValue(value);
+        serializeBlock(rules, entries);
+
+        this.offset--; // we remove the call to serializeMatch
+    }
+
+    private void serializeArray(ArrayRule rule, ArrayEntry entry) {
+        int tempOffset = this.offset;
+        this.offset = 0;
+
+        for (EntryList entries : entry) {
+            serializeBlock(rule.getRules(), entries);
+            this.offset = 0;
+        }
+
+        this.offset = tempOffset; // we remove the call to serializeArray
+    }
+
+    private void serializeSimpleArray(SimpleArrayRule rule, SimpleArrayEntry entry) {
+        for (VariableEntry variable : entry) {
+            serializeVariable(
+                    rule.getType(),
+                    variable
+            );
+        }
+    }
+
+    private void serializeCondition(ConditionRule rule, EntryList entries) {
+        int value = getValueFromVariable(entries.get(rule.getVariable()).getAs(VariableEntry.class));
+
+        if (!rule.isBranchTaken(value)) {
+            this.offset--; // we remove the call to serializeCondition
+            return;
+        }
+
+        List<Rule> rules = rule.getBranchRules();
+        serializeBlock(rules, entries);
+
+        this.offset--; // we remove the call to serializeCondition
+    }
+
     private void serializeVariable(TokenType type, VariableEntry entry) {
-        writer.writeFromTokenType(
+        this.writer.writeFromTokenType(
                 type,
                 entry.getValue(),
                 this.protocolVersion
         );
+    }
+
+    private int getValueFromVariable(VariableEntry entry) {
+        // getting the variable from the variables stack
+        Object variableValue = entry.getValue();
+
+        // this is the variable's value as an int.
+        int value;
+        if (variableValue instanceof VarInt) {
+            // we get the value if it's from a VarInt
+            value = ((VarInt) variableValue).getValue();
+        } else {
+            // we get the value from the object
+            value = Integer.parseInt(variableValue.toString());
+        }
+
+        return value;
+    }
+
+    private VariableEntry getVariableFromScope(String variableName) {
+        for (EntryList list : this.scope) {
+            if (list.get(variableName) != null) {
+                return list.get(variableName).getAs(VariableEntry.class);
+            }
+        }
+
+        return null;
     }
 
     public List<Byte> getData() {

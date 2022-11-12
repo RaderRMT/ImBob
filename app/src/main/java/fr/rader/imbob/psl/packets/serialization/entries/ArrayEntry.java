@@ -1,17 +1,19 @@
 package fr.rader.imbob.psl.packets.serialization.entries;
 
-import java.util.HashMap;
-import java.util.List;
+import fr.rader.imbob.psl.packets.serialization.utils.EntryList;
 
-public class ArrayEntry extends PacketEntry {
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-    /** The list of entries contained in the array */
-    private final HashMap<Integer, List<PacketEntry>> entries;
+public class ArrayEntry extends PacketEntry implements Iterable<EntryList> {
+
+    private final Map<Integer, EntryList> entries;
 
     public ArrayEntry(String name) {
         super(name);
 
-        this.entries = new HashMap<>();
+        this.entries = new LinkedHashMap<>();
     }
 
     /**
@@ -54,9 +56,9 @@ public class ArrayEntry extends PacketEntry {
      * so the one where "one" equals 4, "two" equals 5 and "three" equals 6
      *
      * @param index the entry index
-     * @return {@link List}<{@link PacketEntry}> - the list of entries at the given array index
+     * @return {@link EntryList} - the list of entries at the given array index
      */
-    public List<PacketEntry> getEntriesForIndex(int index) {
+    public EntryList get(int index) {
         return entries.get(index);
     }
 
@@ -64,9 +66,9 @@ public class ArrayEntry extends PacketEntry {
      * Set a list of packet entries at a given array index
      *
      * @param index the entry index
-     * @param entries {@link List}<{@link PacketEntry}> - the list of entries to add
+     * @param entries {@link EntryList} - the list of entries to add
      */
-    public void setEntriesForIndex(int index, List<PacketEntry> entries) {
+    public void set(int index, EntryList entries) {
         this.entries.put(index, entries);
     }
 
@@ -75,10 +77,16 @@ public class ArrayEntry extends PacketEntry {
     }
 
     @Override
+    public Iterator<EntryList> iterator() {
+        return this.entries.values().iterator();
+    }
+
+    @Override
     public String toString() {
         return "ArrayEntry{" +
-                "size=" + entries.size() +
-                ", entries=" + entries +
+                "name=" + getName() +
+                ", size=" + this.entries.size() +
+                ", entries=" + this.entries +
                 '}';
     }
 }

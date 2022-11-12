@@ -4,290 +4,175 @@ import fr.rader.imbob.packets.Packet;
 import fr.rader.imbob.protocol.ProtocolVersion;
 import fr.rader.imbob.psl.packets.definition.PacketDefinition;
 import fr.rader.imbob.psl.packets.definition.rules.*;
-import fr.rader.imbob.psl.packets.serialization.entries.*;
+import fr.rader.imbob.psl.packets.serialization.entries.ArrayEntry;
+import fr.rader.imbob.psl.packets.serialization.entries.SimpleArrayEntry;
+import fr.rader.imbob.psl.packets.serialization.entries.VariableEntry;
+import fr.rader.imbob.psl.packets.serialization.utils.EntryList;
 import fr.rader.imbob.types.VarInt;
 import fr.rader.imbob.utils.data.DataReader;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.List;
+import java.util.Stack;
 
 public class PacketDeserializer {
 
-    private final Stack<HashMap<String, Object>> variablesStack;
+    private final Stack<EntryList> variablesStack;
 
-    private DataReader reader;
-    
     private ProtocolVersion protocolVersion;
+    private DataReader reader;
 
     public PacketDeserializer() {
         this.variablesStack = new Stack<>();
     }
 
-    /**
-     * Deserialize raw bytes from the {@link DataReader} to a {@link Packet} object based on the {@link PacketDefinition} object.
-     *
-     * @param definition the {@link PacketDefinition}
-     * @param packet     the {@link Packet} to fill
-     * @return the deserialized {@link Packet}
-     * @throws IOException if an I/O error occurs.
-     */
-    public Packet deserialize(PacketDefinition definition, Packet packet) throws IOException {
-        if (this.reader == null) {
-            throw new IllegalStateException("DataReader is null!");
-        }
+    public void deserialize(PacketDefinition definition, Packet packet) throws IOException {
+        this.protocolVersion = definition.getProtocolVersion();
 
-        // we keep track of the protocol version so we can
-        // deserialize some data types depending on the protocol version
-        this.protocolVersion = packet.getProtocolVersion();
-
-        // deserialize the packet from
-        // the rules in the definition
         packet.setEntry(deserializeCodeBlockFromRules(
-                // the rules
                 definition.getRules()
         ));
 
         packet.setPacketName(definition.getPacketName());
-
-        return packet;
     }
 
-    /**
-     * Deserialize a code block from the list of {@link Rule} given as a parameter
-     *
-     * @param rules the set of rules used to tell how to deserialize the code block
-     * @return a list of {@link PacketEntry} deserialized from the reader
-     * @throws IOException if an I/O error occurs.
-     */
-    private List<PacketEntry> deserializeCodeBlockFromRules(List<Rule> rules) throws IOException {
-        // the entries in our code block
-        List<PacketEntry> entries = new ArrayList<>();
+    private EntryList deserializeCodeBlockFromRules(List<Rule> rules) throws IOException {
+        // the entries in the current code block
+        EntryList entries = new EntryList();
+        // we push a new hashmap to the stack
+        this.variablesStack.push(new EntryList());
 
-        // this map holds the variables in our code block,
-        // so we know which variables haven't been declared
-        Map<String, Object> variablesInCodeBlock = variablesStack.push(new HashMap<>());
-
-        // we loop through our rules and
-        // deserialize them based on their class
         for (Rule rule : rules) {
-            // check if our rule declares a variable definition
             if (rule instanceof VariableRule) {
-                // if it does, we deserialize the variable
-                deserializeVariable(rule, entries, variablesInCodeBlock);
+                deserializeVariable(
+                        rule.getAs(VariableRule.class),
+                        entries
+                );
             }
 
-            // check if our rule declares an array definition
-            if (rule instanceof ArrayRule) {
-                // if it does, we deserialize the array
-                deserializeArray(rule, entries);
-            }
-
-            // check if our rule declares a simple array definition
-            if (rule instanceof SimpleArrayRule) {
-                // if it does, we deserialize the simple array
-                deserializeSimpleArray(rule, entries);
-            }
-
-            // check if our rule declares a condition definition
-            if (rule instanceof ConditionRule) {
-                // if it does, we deserialize the condition
-                deserializeCondition(rule, entries);
-            }
-
-            // check if our rule declares a match definition
             if (rule instanceof MatchRule) {
-                // if it does, we deserialize the match
-                deserializeMatch(rule, entries);
+                deserializeMatch(
+                        rule.getAs(MatchRule.class),
+                        entries
+                );
+            }
+
+            if (rule instanceof ArrayRule) {
+                deserializeArray(
+                        rule.getAs(ArrayRule.class),
+                        entries
+                );
+            }
+
+            if (rule instanceof SimpleArrayRule) {
+                deserializeSimpleArray(
+                        rule.getAs(SimpleArrayRule.class),
+                        entries
+                );
+            }
+
+            if (rule instanceof ConditionRule) {
+                deserializeCondition(
+                        rule.getAs(ConditionRule.class),
+                        entries
+                );
             }
         }
 
-        // we pop the stack because we're done
-        // reading the code block
-        variablesStack.pop();
-
+        // we pop the stack
+        this.variablesStack.pop();
+        // and we return the entries list
+        // because we're done deserializing the current block
         return entries;
     }
 
-    /**
-     * Deserialize a match from the {@link Rule}'s data
-     *
-     * @param rule the variable's rule containing the variable name and type
-     * @param entries the list of entries in our packet
-     * @throws IOException if an I/O error occurs.
-     */
-    private void deserializeMatch(Rule rule, List<PacketEntry> entries) throws IOException {
-        // we cast our rule back to a MatchRule
-        MatchRule matchRule = (MatchRule) rule;
+    private void deserializeVariable(VariableRule rule, EntryList entries) throws IOException {
+        VariableEntry entry = new VariableEntry(rule.getName());
+        entry.setValue(this.reader.readFromTokenType(
+                rule.getType(),
+                this.protocolVersion
+        ));
 
-        // get value from the variable
-        int value = getValueFromVariable(matchRule.getVariable());
-
-        // we create an instance of our match entry
-        MatchEntry matchEntry = new MatchEntry();
-
-        // we get the entries based on the variable value
-        List<Rule> matchPacketEntries = matchRule.getRulesForValue(value);
-        if (matchPacketEntries != null) {
-            // if the value has been defined in the match,
-            // we give the entry it's entry value
-            matchEntry.setValue(value);
-            // and we deserialize it and store it in the match entry
-            matchEntry.setEntries(
-                    deserializeCodeBlockFromRules(
-                            matchPacketEntries
-                    )
-            );
-        }
-
-        // finally, we add the array entry to the entries
-        entries.add(matchEntry);
-    }
-
-    /**
-     * Deserialize a variable from the {@link Rule}'s data
-     *
-     * @param rule the variable's rule containing the variable name and type
-     * @param entries the list of entries in our packet
-     * @param variablesInCodeBlock the variables in the code block
-     * @throws IOException if an I/O error occurs.
-     */
-    private void deserializeVariable(Rule rule, List<PacketEntry> entries, Map<String, Object> variablesInCodeBlock) throws IOException {
-        // we cast our rule back to a VariableRule
-        VariableRule variableRule = (VariableRule) rule;
-
-        // we create our VariableEntry
-        VariableEntry entry = new VariableEntry(
-                // the variable's name from the rule
-                variableRule.getName(),
-                // we read the data based on the token type
-                reader.readFromTokenType(
-                        variableRule.getType(),
-                        this.protocolVersion
-                )
-        );
-
-        // we add the VariableEntry to the entries list
         entries.add(entry);
 
-        // we add the variable to the variables in code block list,
-        // so we know it has been declared
-        variablesInCodeBlock.put(
-                // the variable's name
-                entry.getName(),
-                // the variable's value
-                entry.getValue()
-        );
+        this.variablesStack.peek().add(entry);
     }
 
-    /**
-     * Deserialize an array from the {@link Rule}'s data
-     *
-     * @param rule the variable's rule containing the variable name and type
-     * @param entries the list of entries in our packet
-     * @throws IOException if an I/O error occurs.
-     */
-    private void deserializeArray(Rule rule, List<PacketEntry> entries) throws IOException {
-        // we cast our rule back to an ArrayRule
-        ArrayRule arrayRule = (ArrayRule) rule;
+    private void deserializeMatch(MatchRule rule, EntryList entries) throws IOException {
+        int value = getValueFromVariable(rule.getVariable());
 
-        // get value from the variable
-        int value = getValueFromVariable(arrayRule.getLengthVariable());
+        List<Rule> matchBlockRules = rule.getRulesForValue(value);
 
-        // we create an instance of our array entry
-        // it'll hold every entry defined in it's rules
-        ArrayEntry arrayEntry = new ArrayEntry(arrayRule.getName());
-        // then we loop for the
-        // total size of our array.
-        // the length is defined in the value variable
+        deserializeCodeBlockFromRules(matchBlockRules).forEach(entry -> entries.add(entry));
+    }
+
+    private void deserializeArray(ArrayRule rule, EntryList entries) throws IOException {
+        int value = getValueFromVariable(rule.getLengthVariable());
+
+        ArrayEntry entry = new ArrayEntry(rule.getName());
         for (int i = 0; i < value; i++) {
-            arrayEntry.setEntriesForIndex(
-                    // this is the array entry index
+            entry.set(
                     i,
-                    // this is the set of entry for the index
                     deserializeCodeBlockFromRules(
-                            arrayRule.getRules()
+                            rule.getRules()
                     )
             );
         }
 
-        // finally, we add the array entry to the entries
-        entries.add(arrayEntry);
+        entries.add(entry);
     }
 
-    /**
-     * Deserialize a simple array from the {@link Rule}'s data
-     *
-     * @param rule the variable's rule containing the variable name and type
-     * @param entries the list of entries in our packet
-     * @throws IOException if an I/O error occurs.
-     */
-    private void deserializeSimpleArray(Rule rule, List<PacketEntry> entries) throws IOException {
-        // we cast our rule back to a SimpleArrayRule
-        SimpleArrayRule simpleArrayRule = (SimpleArrayRule) rule;
+    private void deserializeSimpleArray(SimpleArrayRule rule, EntryList entries) throws IOException {
+        int value = getValueFromVariable(rule.getLengthVariable());
 
-        // get value from the variable
-        int value = getValueFromVariable(simpleArrayRule.getLengthVariable());
-
-        // we create an instance of our simple array entry
-        SimpleArrayEntry simpleArrayEntry = new SimpleArrayEntry(simpleArrayRule.getName());
-        // then we loop for the
-        // total size of our array.
-        // the length is defined in the value variable
+        SimpleArrayEntry entry = new SimpleArrayEntry(rule.getName());
         for (int i = 0; i < value; i++) {
-            simpleArrayEntry.setVariable(
-                    // this is the array entry index
+            entry.setVariable(
                     i,
-                    // this is the set of entry for the index
-                    reader.readFromTokenType(
-                            simpleArrayRule.getType(),
+                    this.reader.readFromTokenType(
+                            rule.getType(),
                             this.protocolVersion
                     )
             );
         }
 
-        // finally, we add the array entry to the entries
-        entries.add(simpleArrayEntry);
+        entries.add(entry);
+    }
+
+    private void deserializeCondition(ConditionRule rule, EntryList entries) throws IOException {
+        int value = getValueFromVariable(rule.getVariable());
+
+        if (!rule.isBranchTaken(value)) {
+            return;
+        }
+
+        deserializeCodeBlockFromRules(rule.getBranchRules()).forEach(entry -> entries.add(entry));
     }
 
     /**
-     * Deserialize a condition from the {@link Rule}'s data
+     * Look in the entire stack for the variable and return its value
      *
-     * @param rule the variable's rule containing the variable name and type
-     * @param entries the list of entries in our packet
-     * @throws IOException if an I/O error occurs.
+     * @param variableName  The variable to get the value from
+     * @param type          The class to cast the variable's value to
+     * @return              The variable's value
      */
-    private void deserializeCondition(Rule rule, List<PacketEntry> entries) throws IOException {
-        // we cast our rule back to a ConditionRule
-        ConditionRule conditionRule = (ConditionRule) rule;
-
-        // get value from the variable
-        int value = getValueFromVariable(conditionRule.getVariable());
-
-        // we create an instance of the condition entry
-        // it'll hold a list of entry if the branch is taken.
-        // is the branch isn't taken, the list will be empty
-        ConditionEntry conditionEntry = new ConditionEntry();
-        if (conditionRule.isBranchTaken(value)) {
-            // if the branch is taken, we deserialize
-            // the branch rules from the condition rule
-            conditionEntry.setEntries(
-                    deserializeCodeBlockFromRules(
-                            conditionRule.getBranchRules()
-                    )
-            );
+    private <T> T getVariableValue(String variableName, Class<T> type) {
+        for (EntryList list : this.variablesStack) {
+            if (list.get(variableName) != null) {
+                return list.get(variableName).getAs(VariableEntry.class).getValueAs(type);
+            }
         }
 
-        // finally, we add the array entry to the entries
-        entries.add(conditionEntry);
+        return null;
     }
 
-    private int getValueFromVariable(String variable) {
+    private int getValueFromVariable(String variableName) {
         // getting the variable from the variables stack
-        Object variableValue = getVariableValue(variable);
+        Object variableValue = getVariableValue(variableName, Object.class);
         // if the variable doesn't exist, we throw an exception.
         // this should never happen, but it's still nice to have nonetheless
         if (variableValue == null) {
-            throw new IllegalStateException("Undefined variable: " + variable);
+            throw new IllegalStateException("Undefined variable: " + variableName);
         }
 
         // this is the variable's value as an int.
@@ -301,16 +186,6 @@ public class PacketDeserializer {
         }
 
         return value;
-    }
-
-    private Object getVariableValue(String variable) {
-        for (HashMap<String, Object> blockVariables : variablesStack) {
-            if (blockVariables.containsKey(variable)) {
-                return blockVariables.get(variable);
-            }
-        }
-
-        return null;
     }
 
     public void setDataReader(DataReader reader) {

@@ -14,4 +14,8 @@ public class Rule {
     public String getName() {
         return name;
     }
+
+    public final <T extends Rule> T getAs(Class<T> clazz) {
+        return clazz.cast(this);
+    }
 }

@@ -1,15 +1,13 @@
 package fr.rader.imbob.tasks.impl;
 
-import java.util.List;
 import java.util.Queue;
 
 import fr.rader.imbob.packets.Packet;
 import fr.rader.imbob.packets.PacketAcceptor;
 import fr.rader.imbob.packets.Packets;
 import fr.rader.imbob.psl.packets.serialization.entries.ArrayEntry;
-import fr.rader.imbob.psl.packets.serialization.entries.MatchEntry;
-import fr.rader.imbob.psl.packets.serialization.entries.PacketEntry;
 import fr.rader.imbob.psl.packets.serialization.entries.VariableEntry;
+import fr.rader.imbob.psl.packets.serialization.utils.EntryList;
 import fr.rader.imbob.tasks.AbstractTask;
 import fr.rader.imbob.tasks.annotations.TaskName;
 import fr.rader.imbob.types.VarInt;
@@ -42,20 +40,12 @@ public class UsernameChangerTask extends AbstractTask {
         switch (action) {
             case ACTION_ADD_PLAYER:
                 ArrayEntry players = packet.getEntry("players").getAs(ArrayEntry.class);
-                for (int i = 0; i < players.size(); i++) {
-                    List<PacketEntry> entries = players.getEntriesForIndex(i);
-                    
-                    for (PacketEntry entry : entries) {
-                        if (!(entry instanceof MatchEntry)) {
-                            continue;
-                        }
-                        
-                        MatchEntry matchEntry = entry.getAs(MatchEntry.class);
-                        VariableEntry username = matchEntry.getEntry("name").getAs(VariableEntry.class);
 
-                        if (username.getValueAs(String.class).equals(this.targetUsername.get())) {
-                            username.setValue(this.newUsername.get());
-                        }
+                for (EntryList player : players) {
+                    VariableEntry username = player.get("name").getAs(VariableEntry.class);
+
+                    if (username.getValueAs(String.class).equals(this.targetUsername.get())) {
+                        username.setValue(this.newUsername.get());
                     }
                 }
 

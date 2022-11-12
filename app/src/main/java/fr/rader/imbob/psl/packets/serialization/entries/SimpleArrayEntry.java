@@ -1,9 +1,10 @@
 package fr.rader.imbob.psl.packets.serialization.entries;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
-public class SimpleArrayEntry extends PacketEntry {
+public class SimpleArrayEntry extends PacketEntry implements Iterable<VariableEntry> {
 
     private final List<VariableEntry> variables;
 
@@ -14,25 +15,34 @@ public class SimpleArrayEntry extends PacketEntry {
     }
 
     public List<VariableEntry> getVariables() {
-        return variables;
+        return this.variables;
     }
 
     public void addVariable(VariableEntry value) {
-        variables.add(value);
+        this.variables.add(value);
     }
 
     public void setVariable(int index, Object value) {
-        variables.add(index, new VariableEntry(null, value));
+        VariableEntry entry = new VariableEntry(null);
+        entry.setValue(value);
+
+        this.variables.add(index, entry);
     }
 
     public VariableEntry getVariable(int index) {
-        return variables.get(index);
+        return this.variables.get(index);
+    }
+
+    @Override
+    public Iterator<VariableEntry> iterator() {
+        return this.variables.iterator();
     }
 
     @Override
     public String toString() {
         return "SimpleArrayEntry{" +
-                "variables=" + variables +
+                "name=" + getName() +
+                ", variables=" + this.variables +
                 '}';
     }
 }

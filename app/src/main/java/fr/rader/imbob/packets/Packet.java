@@ -1,10 +1,8 @@
 package fr.rader.imbob.packets;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import fr.rader.imbob.protocol.ProtocolVersion;
 import fr.rader.imbob.psl.packets.serialization.entries.PacketEntry;
+import fr.rader.imbob.psl.packets.serialization.utils.EntryList;
 import fr.rader.imbob.types.VarInt;
 
 public class Packet {
@@ -12,14 +10,14 @@ public class Packet {
     private final ProtocolVersion protocolVersion;
     private final VarInt packetId;
 
-    private List<PacketEntry> entries;
+    private EntryList entries;
     private String packetName;
 
     public Packet(ProtocolVersion protocolVersion, VarInt packetId) {
         this.protocolVersion = protocolVersion;
         this.packetId = packetId;
 
-        this.entries = new ArrayList<>();
+        this.entries = new EntryList();
     }
 
     public ProtocolVersion getProtocolVersion() {
@@ -52,7 +50,7 @@ public class Packet {
      *
      * @param entry the new entries
      */
-    public void setEntry(List<PacketEntry> entry) {
+    public void setEntry(EntryList entry) {
         this.entries = entry;
     }
 
@@ -66,7 +64,7 @@ public class Packet {
         return null;
     }
 
-    public List<PacketEntry> getEntries() {
+    public EntryList getEntries() {
         return this.entries;
     }
 
@@ -81,7 +79,10 @@ public class Packet {
      * @return  The cloned packet
      */
     public Packet cloneEmpty() {
-        return new Packet(this.protocolVersion, this.packetId);
+        Packet clonedPacket = new Packet(this.protocolVersion, this.packetId);
+        clonedPacket.setPacketName(this.packetName);
+
+        return clonedPacket;
     }
 
     /**
@@ -92,6 +93,7 @@ public class Packet {
     public Packet clone() {
         Packet clonedPacket = cloneEmpty();
         clonedPacket.setEntry(this.getEntries());
+        clonedPacket.setPacketName(this.packetName);
 
         return clonedPacket;
     }

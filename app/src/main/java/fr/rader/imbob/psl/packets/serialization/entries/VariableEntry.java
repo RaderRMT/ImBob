@@ -2,10 +2,11 @@ package fr.rader.imbob.psl.packets.serialization.entries;
 
 public class VariableEntry extends PacketEntry {
 
-    /**
-     * The variable's value
-     */
     private Object value;
+
+    public VariableEntry(String name) {
+        super(name);
+    }
 
     public VariableEntry(String name, Object value) {
         super(name);
@@ -14,22 +15,22 @@ public class VariableEntry extends PacketEntry {
     }
 
     public Object getValue() {
-        return value;
-    }
-
-    public <T> T getValueAs(Class<T> clazz) {
-        return clazz.cast(value);
+        return this.value;
     }
 
     public void setValue(Object value) {
         this.value = value;
     }
 
+    public <T> T getValueAs(Class<T> clazz) {
+        return clazz.cast(this.value);
+    }
+
     @Override
     public String toString() {
         return "VariableEntry{" +
                 "name=" + getName() +
-                ", value=" + value +
+                ", value=" + this.value +
                 '}';
     }
 }
