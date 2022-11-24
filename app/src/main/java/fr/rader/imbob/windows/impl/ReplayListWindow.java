@@ -81,21 +81,18 @@ public class ReplayListWindow extends AbstractWindow {
         
         ImGui.sameLine();
 
+        ImGui.beginDisabled(
+                this.replays.isEmpty() ||
+                ( this.selectedReplay.get() < 0 ||
+                  this.selectedReplay.get() >= this.replays.size() )
+        );
         // we create a button to remove the selected replay
         if (ImGui.button("Remove Selected")) {
-            // we only remove a replay and update the
-            // replay name list if we have at least
-            // one replay in the list and if the selectedReplay
-            // value is in the replays list bounds
-            if (
-                    this.replays.size() != 0 &&
-                    this.selectedReplay.get() >= 0 &&
-                    this.selectedReplay.get() < this.replays.size()
-            ) {
-                this.replays.remove(this.selectedReplay.get());
-                this.isReplayNameListDirty = true;
-            }
+            this.replays.remove(this.selectedReplay.get());
+            this.isReplayNameListDirty = true;
         }
+
+        ImGui.endDisabled();
 
         // if we set the replay name list dirty flag to true,
         // we update the name list ad they'll be
@@ -109,16 +106,25 @@ public class ReplayListWindow extends AbstractWindow {
         ImGui.listBox("Replays", this.selectedReplay, this.replaysName, 2);
         ImGui.popItemWidth();
 
+        ImGui.beginDisabled(
+                this.replays.isEmpty() ||
+                ( this.selectedReplay.get() < 0 ||
+                  this.selectedReplay.get() >= this.replays.size() ) ||
+                this.taskListWindow.getTasks().isEmpty()
+        );
         // if we click on the Edit Selected button and
         // have at least one replay in the replay list
-        if (ImGui.button("Edit Selected") && this.replays.size() > 0) {
+        if (ImGui.button("Edit Selected")) {
             // then we move the selected replay to
             // the imbob folder and we edit it
             moveAndEditReplays(this.replays.get(this.selectedReplay.get()));
         }
 
+        ImGui.endDisabled();
+
         ImGui.sameLine();
 
+        ImGui.beginDisabled(this.replays.isEmpty() || this.taskListWindow.getTasks().isEmpty());
         // if we click on the Edit All button and
         // have at least one replay in the replay list
         if (ImGui.button("Edit All") && this.replays.size() > 0) {
@@ -126,6 +132,8 @@ public class ReplayListWindow extends AbstractWindow {
             // the imbob folder and we edit them
             moveAndEditReplays(this.replays.toArray(new File[0]));
         }
+
+        ImGui.endDisabled();
     }
 
     /**

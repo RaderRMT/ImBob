@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fr.rader.imbob.tasks.AbstractTask;
+import fr.rader.imbob.utils.MathUtils;
 import fr.rader.imbob.windows.AbstractWindow;
 import imgui.ImGui;
 import imgui.flag.ImGuiWindowFlags;
@@ -38,6 +39,7 @@ public class TaskListWindow extends AbstractWindow {
         // be executed. this also allows the user to remove a task that they added
         ImGui.listBox("Tasks", this.selectedTask, this.taskNames, 2);
 
+        ImGui.beginDisabled(this.tasks.isEmpty());
         // we add a Remove Task button
         if (ImGui.button("Remove Task")) {
             // if the user click the button, we'll check
@@ -49,6 +51,8 @@ public class TaskListWindow extends AbstractWindow {
                 updateNames();
             }
         }
+
+        ImGui.endDisabled();
     }
 
     /**
