@@ -9,14 +9,20 @@ import fr.rader.imbob.psl.packets.serialization.entries.ArrayEntry;
 import fr.rader.imbob.psl.packets.serialization.entries.VariableEntry;
 import fr.rader.imbob.psl.packets.serialization.utils.EntryList;
 import fr.rader.imbob.tasks.AbstractTask;
-import fr.rader.imbob.tasks.annotations.TaskName;
+import fr.rader.imbob.tasks.annotations.Task;
 import fr.rader.imbob.types.VarInt;
 import fr.rader.imbob.utils.MojangAPI;
 import fr.rader.imbob.windows.impl.LoggerWindow;
 import imgui.ImGui;
 import imgui.type.ImString;
 
-@TaskName("Skin Changer")
+@Task(
+    value = "Skin Changer",
+    // we set the priority to a high level because we want
+    // to change the skin before changing the username,
+    // so we can use the same username for both tasks
+    priority = 100
+)
 public class SkinChangerTask extends AbstractTask {
 
     private static final int ACTION_ADD_PLAYER = 0;

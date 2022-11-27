@@ -6,26 +6,30 @@ import java.util.Queue;
 
 import fr.rader.imbob.packets.Packet;
 import fr.rader.imbob.packets.PacketAcceptor;
-import fr.rader.imbob.tasks.annotations.TaskName;
+import fr.rader.imbob.tasks.annotations.Task;
 
 public abstract class AbstractTask {
 
     private final List<PacketAcceptor> acceptors;
 
     private final String taskName;
+    private final int priority;
 
     protected AbstractTask() {
         this.acceptors = new ArrayList<>();
         
         // we get the @TaskName annotation
-        TaskName taskNameAnnotation = this.getClass().getDeclaredAnnotation(TaskName.class);
+        Task taskNameAnnotation = this.getClass().getDeclaredAnnotation(Task.class);
+
         // if the class doesn't have an annotation,
         // then we simply get the class name
         if (taskNameAnnotation == null) {
             this.taskName = this.getClass().getSimpleName();
+            this.priority = 0;
         } else {
             // otherwise we get the annotation's value
             this.taskName = taskNameAnnotation.value();
+            this.priority = taskNameAnnotation.priority();
         }
     }
 
@@ -73,14 +77,18 @@ public abstract class AbstractTask {
     public abstract void render();
 
     /**
-     * Get a user friendly task name from the {@link TaskName} annotation.
-     * If the class is not annotated by a {@link TaskName} annotation,
+     * Get a user friendly task name from the {@link Task} annotation.
+     * If the class is not annotated by a {@link Task} annotation,
      * the class' simple name will be returned.
      *
-     * @return  The task's name from the {@link TaskName} annotation,
+     * @return  The task's name from the {@link Task} annotation,
      *          or the class' simple name if no annotation is present
      */
     public final String getTaskName() {
         return this.taskName;
+    }
+
+    public final int getPriority() {
+        return this.priority;
     }
 }

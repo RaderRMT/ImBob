@@ -16,48 +16,39 @@ import java.util.UUID;
 
 public class DataWriter {
 
-    private static final String TEMP_FILE_NAME = "bob-data-writer";
-
     private static final int BUFFER_SIZE = 16384;
-
-    private final File tempFile;
-
-    private final FileOutputStream outputStream;
 
     private final byte[] buffer = new byte[BUFFER_SIZE];
 
-    private List<Byte> data;
+    private final OutputStream outputStream;
+
+    private final List<Byte> data;
 
     private int index = 0;
 
-    public DataWriter(File tempFileDirectory) throws IOException {
-        this.tempFile = File.createTempFile(TEMP_FILE_NAME, null, tempFileDirectory.getAbsoluteFile());
-        this.outputStream = new FileOutputStream(tempFile);
+    // use internal list
+    public DataWriter() {
+        this.outputStream = null;
+        this.data = new ArrayList<>();
     }
 
-    public DataWriter(boolean useTempFile) throws IOException {
-        if (useTempFile) {
-            this.tempFile = File.createTempFile(TEMP_FILE_NAME, null);
-            this.outputStream = new FileOutputStream(tempFile);
-        } else {
-            this.tempFile = null;
-            this.outputStream = null;
-            this.data = new ArrayList<>();
-        }
+    public DataWriter(OutputStream outputStream) throws IOException {
+        this.outputStream = outputStream;
+        this.data = null;
     }
 
     public void writeByte(int value) {
         if (this.data != null) {
-            this.data.add((byte) value);
+            this.data.add((byte) (value & 0xff));
             return;
         }
 
-        if (index == buffer.length) {
+        if (this.index == BUFFER_SIZE) {
             flush();
         }
 
-        buffer[index] = (byte) (value & 0xff);
-        index++;
+        this.buffer[this.index] = (byte) (value & 0xff);
+        this.index++;
     }
 
     public void writeShort(int value) {
@@ -215,19 +206,12 @@ public class DataWriter {
         }
     }
 
-    public InputStream getInputStream() throws IOException {
-        flush();
-
-        outputStream.close();
-
-        return new FileInputStream(tempFile);
-    }
-
     public void flush() {
         try {
-            outputStream.write(buffer, 0, index);
-            outputStream.flush();
-            index = 0;
+            this.outputStream.write(buffer, 0, index);
+            this.outputStream.flush();
+
+            this.index = 0;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -235,9 +219,5 @@ public class DataWriter {
 
     public List<Byte> getData() {
         return this.data;
-    }
-
-    public void clear() {
-        tempFile.delete();
     }
 }

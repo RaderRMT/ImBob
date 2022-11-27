@@ -28,7 +28,7 @@ public class PacketSerializer {
     private int offset;
 
     public PacketSerializer() throws IOException {
-        this.writer = new DataWriter(false);
+        this.writer = new DataWriter(); // this DataWriter will use an internal list
         this.scope = new Stack<>();
     }
 

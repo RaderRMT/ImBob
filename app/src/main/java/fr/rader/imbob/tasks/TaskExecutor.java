@@ -2,6 +2,7 @@ package fr.rader.imbob.tasks;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -37,6 +38,10 @@ public class TaskExecutor {
     private final Map<Integer, PacketDefinition> packetDefinitions;
 
     public TaskExecutor(List<AbstractTask> tasks, List<File> replays, ProgressBarWindow progressBar) {
+        Collections.sort(tasks, (o1, o2) -> o2.getPriority() - o1.getPriority());
+
+        System.out.println(tasks);
+
         this.tasks = tasks;
         this.replays = replays;
         this.progressBar = progressBar;
@@ -76,6 +81,7 @@ public class TaskExecutor {
      * This method is private because applyAllTaskEdits can be used for a single replay
      *
      * @param replay    The replay to edit
+     * @throws IOException
      */
     private void applyTaskEdits(File replay) {
         this.progressBar.setLabel("Editing " + replay.getName() + "...");
@@ -83,142 +89,96 @@ public class TaskExecutor {
         // we can chain multiple applyTaskEdits calls
         this.packetDefinitions.clear();
 
-        // we open the replay file as a zip
-        ZipReader zipReader = new ZipReader(replay);
-        // and we get the metadata from the zip
-        ReplayMetaData metaData = new ReplayMetaData(zipReader.getEntry("metaData.json"));
-
         try {
-            // we open the recording in a datareader, it's a stream on steroid
-            DataReader replayReader = new DataReader(zipReader.getEntry("recording.tmcpr"));
-            // and we make a data writer so we can write
-            // the packets to a new recording file
-            DataWriter writer = new DataWriter(true);
+            ZipReader zipReader = new ZipReader(replay);
+            ZipWriter zipWriter = new ZipWriter(replay);
+
+            ReplayMetaData metaData = new ReplayMetaData(zipReader.getEntryAsStream("metaData.json"));
+
+            DataReader reader = new DataReader(zipReader.getEntryAsStream("recording.tmcpr"));
+            DataWriter writer = new DataWriter(zipWriter.createEntry("recording.tmcpr"));
+
+
+
+            // edit logic
+
+
 
             // we ignore the first packet
-            writer.writeInt(replayReader.readInt());    // this is the timestamp
-            int size = replayReader.readInt();          // this is the packet size
+            writer.writeInt(reader.readInt());
+            int size = reader.readInt();
             writer.writeInt(size);
-            writer.writeByteArray(replayReader.readFollowingBytes(size)); // this is the packet data
+            writer.writeByteArray(reader.readFollowingBytes(size));
 
-            // the packet deserializer is used to, as its name suggest,
-            // deserialize packets from the replayReader to a Packet
-            PacketDeserializer deserializer = new PacketDeserializer();
-            // we set the deserializer's data reader to the replayReader
-            // so the packet deserializer knows where to read the data
-            deserializer.setDataReader(replayReader);
-            // the packet serializer is used to, as its name suggest,
-            // serialize packets to a data writer
             PacketSerializer serializer = new PacketSerializer();
-            // we create a queue for our packets, this will allow tasks
-            // to clear the queue to not write any packet, or add
-            // multiple packets to be added in the recording
+            PacketDeserializer deserializer = new PacketDeserializer();
+            deserializer.setDataReader(reader);
+
             Queue<Packet> packets = new LinkedList<>();
 
-            // we get the protocol version from the replay metadata
             ProtocolVersion protocolVersion = metaData.getProtocol();
 
-            // we read the replayReader until we're at the end of the recording
-            while (replayReader.getLength() != 0) {
-                // we get the packet timestamp
-                int timestamp = replayReader.readInt();
-                // we get the packet size
-                int packetSize = replayReader.readInt();
-                // and we get the packet id
-                VarInt packetId = replayReader.readVarInt();
+            while (reader.hasNext()) {
+                int timestamp = reader.readInt();
+                int packetSize = reader.readInt();
+                VarInt packetId = reader.readVarInt();
 
-                // at this point, we can update the progress bar.
-                // we could've done it after reading timestamp but
-                // i don't want to mix things together
                 this.progressBar.setProgress((float) timestamp / (float) metaData.getDuration());
 
-                // we create an empty packet that only contains the protocol version and the packet id.
-                // each task will then get the packet and see if they can edit it based on those 2 values.
                 Packet packet = new Packet(protocolVersion, packetId);
-                // we loop through all the tasks
                 for (AbstractTask task : this.tasks) {
-                    // we ignore the packet if it's not accepted
                     if (!task.accept(packet)) {
                         continue;
                     }
 
-                    // we fill the packet only if it is empty.
-                    // this prevents us from reading garbage data if
-                    // at least two tasks are used at once
                     if (packet.isEmpty()) {
-                        // we get the packet definition for the packet we want to edit
                         PacketDefinition definition = getPacketDefinition(protocolVersion, packetId);
-                        // and we deserialize the packet
                         deserializer.deserialize(definition, packet);
                     }
 
-                    // we create a clone of the packet because we don't
-                    // want to do edits based on a packet that
-                    // might've been edited by a previous task.
-                    // we then add that cloned packet to the packets queue
                     packets.add(packet.clone());
-                    // we execute the task.
-                    // we peek the packet in the queue because we want
-                    // to edit the packet contained in the queue
-                    task.execute(packets.peek(), packets);
-
-                    // we loop through each packet we want to add in the replay.
-                    // the queue can be empty or contain more than one packet.
-                    while (!packets.isEmpty()) {
-                        // we get the head of the queue
-                        Packet packetToWrite = packets.poll();
-                        VarInt packetIdToWrite = packetToWrite.getPacketId();
-
-                        // we get the packet definition
-                        PacketDefinition definition = getPacketDefinition(protocolVersion, packetIdToWrite);
-                        // we serialize the packet back to a list of bytes
-                        serializer.serialize(definition, packetToWrite);
-                        // we get the serialized packet
-                        List<Byte> data = serializer.getData();
-
-                        // we write the timestamp to the data writer
-                        writer.writeInt(timestamp);
-                        // and we write all the data, so the size of the packet data
-                        // + the size of the packet id, giving us the size of the entire packet
-                        writer.writeInt(data.size() + packetIdToWrite.size());
-                        // then we write the packet id
-                        writer.writeVarInt(packetIdToWrite.getValue());
-                        // and finally we write the packet data
-                        writer.writeByteArray(ListUtils.toByteArray(data));
-                    }
+                    task.execute(packet, packets);
                 }
 
-                // we check if the packet has no entries so
-                // we don't write it twice after editing it
                 if (packet.isEmpty()) {
-                    // if the packet has no entries, this means it hasn't been accepted by a task.
-                    // we just have to rewrite its timestamp, packet size, id and data
                     writer.writeInt(timestamp);
                     writer.writeInt(packetSize);
                     writer.writeVarInt(packetId.getValue());
-                    writer.writeByteArray(replayReader.readFollowingBytes(packetSize - packetId.size()));
+                    writer.writeByteArray(reader.readFollowingBytes(packetSize - packetId.size()));
+                } else {
+                    while (!packets.isEmpty()) {
+                        Packet packetToWrite = packets.poll();
+                        VarInt packetIdToWrite = packetToWrite.getPacketId();
+
+                        PacketDefinition definition = getPacketDefinition(protocolVersion, packetIdToWrite);
+                        serializer.serialize(definition, packetToWrite);
+                        List<Byte> data = serializer.getData();
+
+                        writer.writeInt(timestamp);
+                        writer.writeInt(data.size() + packetIdToWrite.size());
+                        writer.writeVarInt(packetIdToWrite.getValue());
+                        writer.writeByteArray(ListUtils.toByteArray(data));
+                    }
                 }
             }
 
-            // we flush the buffer in the writer
+
+
+
+
+            // end edit logic
+
             writer.flush();
+            zipWriter.closeEntry();
 
-            // we write a zip file for our recording
-            ZipWriter zipWriter = new ZipWriter(replay);
-
-            // we get the data writer as an input stream, so we can write
-            // its content to a "recording.tmcpr" entry in the zip file
-            zipWriter.addEntry("recording.tmcpr", writer.getInputStream());
-            // then we can copy over all the missing files
             zipReader.dumpToZipWriter(zipWriter);
 
-            // we close the zip reader
-            zipReader.close();
-            // we can close both the replay zip and writer's input stream
             zipWriter.close();
 
-            // and we can delete the temp file generated by the data writer
-            writer.clear();
+            reader.close();
+            zipReader.close();
+
+            zipWriter.move();
         } catch (IOException e) {
             LoggerWindow.error("Error when editing " + replay.getName() + ": " + e.getMessage());
             returnUserControl();

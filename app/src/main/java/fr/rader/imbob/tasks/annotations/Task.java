@@ -7,7 +7,14 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface TaskName {
+public @interface Task {
 
     String value();
+
+    /**
+     * Sets a priority for the given task.
+     * A high priority means the task will be executed before
+     * the other tasks with a smaller priority
+     */
+    int priority() default 0;
 }

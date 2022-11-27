@@ -8,7 +8,7 @@ import fr.rader.imbob.packets.Packets;
 import fr.rader.imbob.protocol.ProtocolVersion;
 import fr.rader.imbob.psl.packets.serialization.entries.VariableEntry;
 import fr.rader.imbob.tasks.AbstractTask;
-import fr.rader.imbob.tasks.annotations.TaskName;
+import fr.rader.imbob.tasks.annotations.Task;
 import fr.rader.imbob.types.nbt.TagCompound;
 import fr.rader.imbob.types.nbt.TagList;
 import fr.rader.imbob.types.nbt.TagLong;
@@ -16,7 +16,7 @@ import fr.rader.imbob.utils.MathUtils;
 import imgui.ImGui;
 import imgui.type.ImInt;
 
-@TaskName("Time Changer")
+@Task("Time Changer")
 public class TimeChangerTask extends AbstractTask {
 
     private static final int TICKS_PER_DAY = 24_000;

@@ -9,12 +9,12 @@ import fr.rader.imbob.psl.packets.serialization.entries.ArrayEntry;
 import fr.rader.imbob.psl.packets.serialization.entries.VariableEntry;
 import fr.rader.imbob.psl.packets.serialization.utils.EntryList;
 import fr.rader.imbob.tasks.AbstractTask;
-import fr.rader.imbob.tasks.annotations.TaskName;
+import fr.rader.imbob.tasks.annotations.Task;
 import fr.rader.imbob.types.VarInt;
 import imgui.ImGui;
 import imgui.type.ImString;
 
-@TaskName("Username Changer")
+@Task("Username Changer")
 public class UsernameChangerTask extends AbstractTask {
 
     private static final int ACTION_ADD_PLAYER = 0;

@@ -8,12 +8,12 @@ import fr.rader.imbob.packets.Packets;
 import fr.rader.imbob.protocol.ProtocolVersion;
 import fr.rader.imbob.psl.packets.serialization.entries.VariableEntry;
 import fr.rader.imbob.tasks.AbstractTask;
-import fr.rader.imbob.tasks.annotations.TaskName;
+import fr.rader.imbob.tasks.annotations.Task;
 import fr.rader.imbob.types.VarInt;
 import imgui.ImGui;
 import imgui.type.ImInt;
 
-@TaskName("Weather Changer")
+@Task("Weather Changer")
 public class WeatherChangerTask extends AbstractTask {
 
     private static final int BEGIN_RAIN           = 1;

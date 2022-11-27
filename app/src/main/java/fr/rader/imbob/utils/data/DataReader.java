@@ -265,6 +265,16 @@ public class DataReader {
         }
     }
 
+    public boolean hasNext() {
+        try {
+            return this.inputStream.available() > 0;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
     public int getLength() {
         try {
             return inputStream.available();
