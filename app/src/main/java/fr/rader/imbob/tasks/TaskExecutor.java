@@ -40,8 +40,6 @@ public class TaskExecutor {
     public TaskExecutor(List<AbstractTask> tasks, List<File> replays, ProgressBarWindow progressBar) {
         Collections.sort(tasks, (o1, o2) -> o2.getPriority() - o1.getPriority());
 
-        System.out.println(tasks);
-
         this.tasks = tasks;
         this.replays = replays;
         this.progressBar = progressBar;
@@ -97,12 +95,6 @@ public class TaskExecutor {
 
             DataReader reader = new DataReader(zipReader.getEntryAsStream("recording.tmcpr"));
             DataWriter writer = new DataWriter(zipWriter.createEntry("recording.tmcpr"));
-
-
-
-            // edit logic
-
-
 
             // we ignore the first packet
             writer.writeInt(reader.readInt());
@@ -161,12 +153,6 @@ public class TaskExecutor {
                     }
                 }
             }
-
-
-
-
-
-            // end edit logic
 
             writer.flush();
             zipWriter.closeEntry();
