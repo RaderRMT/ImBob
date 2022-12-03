@@ -18,6 +18,8 @@ public class LicensesWindow extends AbstractWindow {
         this.dependencies = new ArrayList<>();
         this.dependencies.add(new Pair<String, License>("gson", License.APACHE_2));
         this.dependencies.add(new Pair<String, License>("imgui-java", License.APACHE_2));
+        this.dependencies.add(new Pair<String, License>("commons-io", License.APACHE_2));
+        this.dependencies.add(new Pair<String, License>("jgit", License.EDL_1));
 
         this.columnSpacing = 90;
 
@@ -61,7 +63,8 @@ public class LicensesWindow extends AbstractWindow {
 
     private static enum License {
 
-        APACHE_2("Apache 2.0", "https://www.apache.org/licenses/LICENSE-2.0.html");
+        APACHE_2("Apache 2.0", "https://www.apache.org/licenses/LICENSE-2.0.html"),
+        EDL_1("EDL 1.0", "https://www.eclipse.org/org/documents/edl-v10.php");
 
         private final String name;
         private final String link;

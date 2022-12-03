@@ -24,6 +24,9 @@ repositories {
 dependencies {
     implementation("com.google.code.gson:gson:2.8.9")
     implementation("io.github.spair:imgui-java-app:1.86.4")
+    implementation("commons-io:commons-io:2.11.0")
+
+    implementation("org.eclipse.jgit:org.eclipse.jgit:6.4.0.202211300538-r")
 }
 
 tasks.withType<Jar> {

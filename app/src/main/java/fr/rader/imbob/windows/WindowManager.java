@@ -13,6 +13,7 @@ import fr.rader.imbob.windows.impl.ProgressBarWindow;
 import fr.rader.imbob.windows.impl.ReplayListWindow;
 import fr.rader.imbob.windows.impl.TaskListWindow;
 import fr.rader.imbob.windows.impl.TaskWindow;
+import fr.rader.imbob.windows.impl.UpdaterWindow;
 
 public class WindowManager {
 
@@ -23,7 +24,8 @@ public class WindowManager {
             ReplayListWindow.class,
             TaskListWindow.class,
             LicensesWindow.class,
-            LoggerWindow.class
+            LoggerWindow.class,
+            UpdaterWindow.class
     );
 
     private final List<AbstractWindow> windows;

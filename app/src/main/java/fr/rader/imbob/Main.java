@@ -1,9 +1,14 @@
 package fr.rader.imbob;
 
+import fr.rader.imbob.updater.PSLUpdater;
+
 public class Main {
 
     public static void main(String[] args) {
-        ImBob bobLite = new ImBob();
+        PSLUpdater updater = new PSLUpdater();
+        updater.update();
+
+        ImBob bobLite = new ImBob(updater);
         bobLite.start();
     }
 }

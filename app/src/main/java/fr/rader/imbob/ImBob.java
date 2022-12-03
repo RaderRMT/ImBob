@@ -2,8 +2,10 @@ package fr.rader.imbob;
 
 import org.lwjgl.glfw.GLFW;
 
+import fr.rader.imbob.updater.PSLUpdater;
 import fr.rader.imbob.windows.WindowManager;
 import fr.rader.imbob.windows.impl.LicensesWindow;
+import fr.rader.imbob.windows.impl.UpdaterWindow;
 import imgui.ImGui;
 import imgui.app.Application;
 import imgui.app.Configuration;
@@ -16,9 +18,15 @@ public class ImBob extends Application {
 
     private final WindowManager windowManager;
 
-    ImBob() {
+    ImBob(PSLUpdater updater) {
         this.windowManager = new WindowManager();
         this.windowManager.initializeAllWindows();
+
+        if (updater.hasBeenUpdated()) {
+            UpdaterWindow updaterWindow = this.windowManager.getWindowByClass(UpdaterWindow.class);
+            updaterWindow.setUpdater(updater);
+            updaterWindow.setVisible(true);
+        }
     }
 
     @Override

@@ -26,7 +26,7 @@ public class Packets {
     }
 
     public static String getPSLPath(Protocol protocol, int packetId) {
-        StringBuilder path = new StringBuilder(OS.getImBobFolder() + "protocols/");
+        StringBuilder path = new StringBuilder(OS.getAssetsFolder() + "protocols/");
 
         PacketData packet = get(protocol, packetId);
         path.append(packet.getName());
@@ -51,7 +51,7 @@ public class Packets {
 
     public static Packets getInstance() {
         if (instance == null) {
-            try (FileReader reader = new FileReader(OS.getImBobFolder() + "packets.json")) {
+            try (FileReader reader = new FileReader(OS.getAssetsFolder() + "packets.json")) {
                 instance = new Gson().fromJson(reader, Packets.class);
             } catch (IOException e) {
                 e.printStackTrace();

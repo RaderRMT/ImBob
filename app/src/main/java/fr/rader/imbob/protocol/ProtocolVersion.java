@@ -21,7 +21,7 @@ public class ProtocolVersion {
 
     public static ProtocolVersion getInstance() {
         if (instance == null) {
-            try (FileReader reader = new FileReader(OS.getImBobFolder() + "protocol_versions.json")) {
+            try (FileReader reader = new FileReader(OS.getAssetsFolder() + "protocol_versions.json")) {
                 instance = new Gson().fromJson(reader, ProtocolVersion.class);
             } catch (IOException e) {
                 e.printStackTrace();

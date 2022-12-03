@@ -12,6 +12,10 @@ public class OS {
         return System.getProperty("user.home").replace("\\", "/") + "/.imbob/";
     }
 
+    public static String getAssetsFolder() {
+        return getImBobFolder() + "assets/";
+    }
+
     public static boolean isWindows() {
         return PLATFORM == WINDOWS;
     }
