@@ -1,7 +1,7 @@
 package fr.rader.imbob.psl.packets.serialization;
 
 import fr.rader.imbob.packets.Packet;
-import fr.rader.imbob.protocol.ProtocolVersion;
+import fr.rader.imbob.protocol.Protocol;
 import fr.rader.imbob.psl.packets.definition.PacketDefinition;
 import fr.rader.imbob.psl.packets.definition.rules.*;
 import fr.rader.imbob.psl.packets.serialization.entries.ArrayEntry;
@@ -23,7 +23,7 @@ public class PacketSerializer {
 
     private final DataWriter writer;
 
-    private ProtocolVersion protocolVersion;
+    private Protocol protocolVersion;
 
     private int offset;
 
@@ -34,7 +34,7 @@ public class PacketSerializer {
 
     public void serialize(PacketDefinition definition, Packet packet) {
         this.writer.getData().clear();
-        this.protocolVersion = packet.getProtocolVersion();
+        this.protocolVersion = packet.getProtocol();
         this.offset = 0;
 
         serializeBlock(

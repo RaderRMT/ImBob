@@ -1,26 +1,26 @@
 package fr.rader.imbob.packets;
 
-import fr.rader.imbob.protocol.ProtocolVersion;
+import fr.rader.imbob.protocol.Protocol;
 import fr.rader.imbob.psl.packets.serialization.entries.PacketEntry;
 import fr.rader.imbob.psl.packets.serialization.utils.EntryList;
 import fr.rader.imbob.types.VarInt;
 
 public class Packet {
 
-    private final ProtocolVersion protocolVersion;
+    private final Protocol protocolVersion;
     private final VarInt packetId;
 
     private EntryList entries;
     private String packetName;
 
-    public Packet(ProtocolVersion protocolVersion, VarInt packetId) {
+    public Packet(Protocol protocolVersion, VarInt packetId) {
         this.protocolVersion = protocolVersion;
         this.packetId = packetId;
 
         this.entries = new EntryList();
     }
 
-    public ProtocolVersion getProtocolVersion() {
+    public Protocol getProtocol() {
         return this.protocolVersion;
     }
 

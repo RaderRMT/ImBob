@@ -1,6 +1,6 @@
 package fr.rader.imbob.psl.packets.definition;
 
-import fr.rader.imbob.protocol.ProtocolVersion;
+import fr.rader.imbob.protocol.Protocol;
 import fr.rader.imbob.psl.packets.definition.rules.Rule;
 import fr.rader.imbob.types.VarInt;
 
@@ -18,9 +18,9 @@ public class PacketDefinition {
      * this PacketDefinition defines */
     private final VarInt packetID;
 
-    private final ProtocolVersion protocolVersion;
+    private final Protocol protocolVersion;
 
-    PacketDefinition(List<Rule> rules, VarInt packetID, ProtocolVersion protocolVersion) {
+    PacketDefinition(List<Rule> rules, VarInt packetID, Protocol protocolVersion) {
         // the first rule is always a Variable Rule,
         // with a type of PACKET, and it's name is the packet name,
         // so we get the name from the first rule
@@ -46,7 +46,7 @@ public class PacketDefinition {
         return packetID;
     }
 
-    public ProtocolVersion getProtocolVersion() {
+    public Protocol getProtocol() {
         return protocolVersion;
     }
 }

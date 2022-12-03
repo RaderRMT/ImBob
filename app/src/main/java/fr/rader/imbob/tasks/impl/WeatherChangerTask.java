@@ -5,6 +5,7 @@ import java.util.Queue;
 import fr.rader.imbob.packets.Packet;
 import fr.rader.imbob.packets.PacketAcceptor;
 import fr.rader.imbob.packets.Packets;
+import fr.rader.imbob.protocol.Protocol;
 import fr.rader.imbob.protocol.ProtocolVersion;
 import fr.rader.imbob.psl.packets.serialization.entries.VariableEntry;
 import fr.rader.imbob.tasks.AbstractTask;
@@ -32,17 +33,17 @@ public class WeatherChangerTask extends AbstractTask {
     public WeatherChangerTask() {
         this.selectedWeather = new ImInt(0);
 
-        acceptPacket(PacketAcceptor.accept(Packets.CHANGE_GAME_STATE));
+        acceptPacket(PacketAcceptor.accept(Packets.get("change_game_state")));
         // we accept the Join Game packet because we will insert a few
         // Change Game State packets after it if the user decides
         // to change the weather to either rain or thunder
-        acceptPacket(PacketAcceptor.accept(Packets.JOIN_GAME));
+        acceptPacket(PacketAcceptor.accept(Packets.get("join_game")));
     }
 
     @Override
     public void execute(Packet packet, Queue<Packet> packets) {
         String newWeather = WEATHERS[this.selectedWeather.get()];
-        ProtocolVersion protocolVersion = packet.getProtocolVersion();
+        Protocol protocolVersion = packet.getProtocol();
 
         switch (packet.getPacketName()) {
             case "join_game":
@@ -58,7 +59,7 @@ public class WeatherChangerTask extends AbstractTask {
                 Packet beginRainPacket = new Packet(
                         protocolVersion,
                         new VarInt(
-                                Packets.CHANGE_GAME_STATE.getPacketIdForProtocol(protocolVersion)
+                                Packets.get("change_game_state").getPacketIdForProtocol(protocolVersion)
                         )
                 );
 

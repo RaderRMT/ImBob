@@ -7,11 +7,11 @@ import fr.rader.imbob.psl.tokens.TokenList;
 import fr.rader.imbob.types.VarInt;
 import fr.rader.imbob.windows.impl.LoggerWindow;
 import fr.rader.imbob.psl.lexer.Validator;
-import fr.rader.imbob.protocol.ProtocolVersion;
+import fr.rader.imbob.packets.Packets;
+import fr.rader.imbob.protocol.Protocol;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,19 +19,13 @@ import static fr.rader.imbob.psl.tokens.TokenType.*;
 
 public class PacketDefinitionFactory {
 
-    public static PacketDefinition createPacketDefinition(ProtocolVersion protocol, VarInt packetID) throws IOException {
-        LoggerWindow.info("Using the new and improved lexer for '" + packetID.getValue() + ".psl' from protocol " + protocol);
+    public static PacketDefinition createPacketDefinition(Protocol protocol, VarInt packetID) throws IOException {
+        LoggerWindow.info("Using the new and improved lexer for '" + packetID.getValue() + ".psl' from protocol " + protocol.getName() + '(' + protocol.getVersion() + ')');
 
         // get the source file depending on
         // the protocol and the packet id
-        // from the jar's resources folder
-        File source;
-        try {
-            source = new File(PacketDefinitionFactory.class.getResource("/protocols/" + protocol.getProtocolId() +  '/' + packetID.getValue() + ".psl").toURI());
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-            return null;
-        }
+        // from ImBob's folder
+        File source = new File(Packets.getPSLPath(protocol, packetID.getValue()));
 
         // if the source doesn't exist,
         // we leave the constructor

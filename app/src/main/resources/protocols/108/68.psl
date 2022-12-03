@@ -1,4 +1,0 @@
-packet "time_update" {
-    long "world_age";
-    long "time_of_day";
-}

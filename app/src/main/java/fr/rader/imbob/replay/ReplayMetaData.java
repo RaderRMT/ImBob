@@ -9,6 +9,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import fr.rader.imbob.protocol.Protocol;
 import fr.rader.imbob.protocol.ProtocolVersion;
 import fr.rader.imbob.utils.JsonUtils;
 
@@ -45,7 +46,7 @@ public class ReplayMetaData {
     private int fileFormatVersion;
 
     /** The Minecraft protocol version */
-    private ProtocolVersion protocol;
+    private Protocol protocol;
 
     /** This is the name of the program
      * that generated the replay file */
@@ -83,7 +84,7 @@ public class ReplayMetaData {
                     case "mcversion":           this.mcversion = value.getAsString(); break;
                     case "fileFormat":          this.fileFormat = value.getAsString(); break;
                     case "fileFormatVersion":   this.fileFormatVersion = value.getAsInt(); break;
-                    case "protocol":            this.protocol = ProtocolVersion.getProtocolFromId(value.getAsInt()); break;
+                    case "protocol":            this.protocol = ProtocolVersion.getFromId(value.getAsInt()); break;
                     case "generator":           this.generator = value.getAsString(); break;
                     case "selfId":              this.selfId = value.getAsInt(); break;
                     case "players":             this.players = JsonUtils.getAsStringArray(value.getAsJsonArray()); break;
@@ -127,7 +128,7 @@ public class ReplayMetaData {
         return this.fileFormatVersion;
     }
 
-    public ProtocolVersion getProtocol() {
+    public Protocol getProtocol() {
         return this.protocol;
     }
 

@@ -38,7 +38,7 @@ public class SkinChangerTask extends AbstractTask {
         this.fetchValue = new ImString();
         this.hasSkinBeenChanged = false;
 
-        acceptPacket(PacketAcceptor.accept(Packets.PLAYER_INFO));
+        acceptPacket(PacketAcceptor.accept(Packets.get("player_info")));
     }
 
     @Override

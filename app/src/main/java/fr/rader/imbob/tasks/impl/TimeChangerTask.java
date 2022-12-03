@@ -27,11 +27,11 @@ public class TimeChangerTask extends AbstractTask {
     public TimeChangerTask() {
         this.timeOfDay = new ImInt(NOON);
 
-        acceptPacket(PacketAcceptor.accept(Packets.TIME_UPDATE));
+        acceptPacket(PacketAcceptor.accept(Packets.get("time_update")));
         // we accept the Join Game packet starting from MC 1.16 because
         // it's at this version that the Join Game packet contains the
         // fixed time field if the world/server has the doDaylightCycle gamerule set to false
-        acceptPacket(PacketAcceptor.accept(Packets.JOIN_GAME).from(ProtocolVersion.MC_1_16));
+        acceptPacket(PacketAcceptor.accept(Packets.get("join_game")).from(ProtocolVersion.get("MC_1_16")));
     }
 
     @Override

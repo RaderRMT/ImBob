@@ -1,23 +1,23 @@
 package fr.rader.imbob.types;
 
-import fr.rader.imbob.protocol.ProtocolVersion;
+import fr.rader.imbob.protocol.Protocol;
 
 public class Position {
 
-    private final ProtocolVersion protocolVersion;
+    private final Protocol protocolVersion;
 
     private int x;
     private int y;
     private int z;
 
-    public Position(ProtocolVersion protocolVersion, int x, int y, int z) {
+    public Position(Protocol protocolVersion, int x, int y, int z) {
         this.protocolVersion = protocolVersion;
         this.x = x;
         this.y = y;
         this.z = z;
     }
 
-    public ProtocolVersion getProtocolVersion() {
+    public Protocol getProtocol() {
         return this.protocolVersion;
     }
 

@@ -27,7 +27,7 @@ public class UsernameChangerTask extends AbstractTask {
         this.targetUsername = new ImString();
         this.newUsername = new ImString();
 
-        acceptPacket(PacketAcceptor.accept(Packets.PLAYER_INFO));
+        acceptPacket(PacketAcceptor.accept(Packets.get("player_info")));
     }
 
     @Override

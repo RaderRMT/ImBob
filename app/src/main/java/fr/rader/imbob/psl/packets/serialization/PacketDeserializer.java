@@ -1,7 +1,7 @@
 package fr.rader.imbob.psl.packets.serialization;
 
 import fr.rader.imbob.packets.Packet;
-import fr.rader.imbob.protocol.ProtocolVersion;
+import fr.rader.imbob.protocol.Protocol;
 import fr.rader.imbob.psl.packets.definition.PacketDefinition;
 import fr.rader.imbob.psl.packets.definition.rules.*;
 import fr.rader.imbob.psl.packets.serialization.entries.ArrayEntry;
@@ -19,7 +19,7 @@ public class PacketDeserializer {
 
     private final Stack<EntryList> variablesStack;
 
-    private ProtocolVersion protocolVersion;
+    private Protocol protocolVersion;
     private DataReader reader;
 
     public PacketDeserializer() {
@@ -27,7 +27,7 @@ public class PacketDeserializer {
     }
 
     public void deserialize(PacketDefinition definition, Packet packet) throws IOException {
-        this.protocolVersion = definition.getProtocolVersion();
+        this.protocolVersion = definition.getProtocol();
 
         packet.setEntry(deserializeCodeBlockFromRules(
                 definition.getRules()

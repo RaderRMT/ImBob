@@ -1,9 +1,0 @@
-packet "join_game" {
-    int "entity_id";
-    byte "gamemode";
-    int "dimension";
-    byte "difficulty";
-    byte "max_players";
-    string "level_type";
-    boolean "reduced_debug_info";
-}

@@ -1,5 +1,6 @@
 package fr.rader.imbob.utils.data;
 
+import fr.rader.imbob.protocol.Protocol;
 import fr.rader.imbob.protocol.ProtocolVersion;
 import fr.rader.imbob.psl.tokens.TokenType;
 import fr.rader.imbob.types.Position;
@@ -128,7 +129,7 @@ public class DataWriter {
     }
 
     public void writePosition(Position position) {
-        if (position.getProtocolVersion().isBeforeExclusive(ProtocolVersion.MC_1_14)) {
+        if (position.getProtocol().isBeforeExclusive(ProtocolVersion.get("MC_1_14"))) {
             writeLong(
                     ((position.getX() & 0x3ffffff) << 38) |
                     ((position.getY() & 0xfff) << 26) |
@@ -143,7 +144,7 @@ public class DataWriter {
         }
     }
 
-    public void writeFromTokenType(TokenType type, Object value, ProtocolVersion version) {
+    public void writeFromTokenType(TokenType type, Object value, Protocol version) {
         switch (type) {
             case BOOLEAN:
             case BYTE:

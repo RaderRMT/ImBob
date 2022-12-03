@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Queue;
 
 import fr.rader.imbob.packets.Packet;
-import fr.rader.imbob.protocol.ProtocolVersion;
+import fr.rader.imbob.protocol.Protocol;
 import fr.rader.imbob.psl.packets.definition.PacketDefinition;
 import fr.rader.imbob.psl.packets.definition.PacketDefinitionFactory;
 import fr.rader.imbob.psl.packets.serialization.PacketDeserializer;
@@ -108,7 +108,7 @@ public class TaskExecutor {
 
             Queue<Packet> packets = new LinkedList<>();
 
-            ProtocolVersion protocolVersion = metaData.getProtocol();
+            Protocol protocolVersion = metaData.getProtocol();
 
             while (reader.hasNext()) {
                 int timestamp = reader.readInt();
@@ -172,16 +172,16 @@ public class TaskExecutor {
     }
 
     /**
-     * Get or create a {@link PacketDefinition} based on the given {@link ProtocolVersion},
+     * Get or create a {@link PacketDefinition} based on the given {@link Protocol},
      * packet id and the current state of the packetDefinitions list.
      *
-     * @param version   The replay {@link ProtocolVersion}
+     * @param version   The replay {@link Protocol}
      * @param packetId  The packet id
      * @return          The {@link PacketDefinition} from the packetDefinitions list,
      *                  or a new {@link PacketDefinition} if it isn't contained in the list
      * @throws IOException If an I/O error occurs
      */
-    private PacketDefinition getPacketDefinition(ProtocolVersion version, VarInt packetId) throws IOException {
+    private PacketDefinition getPacketDefinition(Protocol version, VarInt packetId) throws IOException {
         // we create a new packet definition if the list
         // doesn't contain the wanted packet definition
         if (!this.packetDefinitions.containsKey(packetId.getValue())) {

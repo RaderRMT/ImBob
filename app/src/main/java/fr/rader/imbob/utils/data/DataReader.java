@@ -6,6 +6,7 @@ import fr.rader.imbob.types.VarInt;
 import fr.rader.imbob.types.VarLong;
 import fr.rader.imbob.types.nbt.TagCompound;
 import fr.rader.imbob.windows.impl.LoggerWindow;
+import fr.rader.imbob.protocol.Protocol;
 import fr.rader.imbob.protocol.ProtocolVersion;
 
 import java.io.*;
@@ -187,14 +188,14 @@ public class DataReader {
         return new UUID(byteBuffer.getLong(), byteBuffer.getLong());
     }
 
-    public Position readPosition(ProtocolVersion protocolVersion) throws IOException {
+    public Position readPosition(Protocol protocolVersion) throws IOException {
         long positionValue = readLong();
 
         int x;
         int y;
         int z;
 
-        if (protocolVersion.isBeforeExclusive(ProtocolVersion.MC_1_14)) {
+        if (protocolVersion.isBeforeExclusive(ProtocolVersion.get("MC_1_14"))) {
             x = (int) (positionValue >> 38);
             y = (int) (positionValue >> 26) & 0xfff;
             z = (int) (positionValue << 38 >> 38);
@@ -207,7 +208,7 @@ public class DataReader {
         return new Position(protocolVersion, x, y, z);
     }
 
-    public Object readFromTokenType(TokenType type, ProtocolVersion protocolVersion) throws IOException {
+    public Object readFromTokenType(TokenType type, Protocol protocolVersion) throws IOException {
         switch (type) {
             case BOOLEAN:
                 return readBoolean() ? 1 : 0;
