@@ -72,6 +72,10 @@ public class ArrayEntry extends PacketEntry implements Iterable<EntryList> {
         this.entries.put(index, entries);
     }
 
+    public void add(EntryList entries) {
+        set(size(), entries);
+    }
+
     public int size() {
         return this.entries.size();
     }

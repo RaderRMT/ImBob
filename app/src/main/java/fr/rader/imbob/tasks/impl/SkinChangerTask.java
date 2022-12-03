@@ -27,14 +27,16 @@ public class SkinChangerTask extends AbstractTask {
 
     private static final int ACTION_ADD_PLAYER = 0;
 
-    private static String[] cachedSkinData;
-
     private final ImString targetUsername;
     private final ImString fetchValue;
+
+    private String[] cachedSkinData;
+    private boolean hasSkinBeenChanged;
 
     public SkinChangerTask() {
         this.targetUsername = new ImString();
         this.fetchValue = new ImString();
+        this.hasSkinBeenChanged = false;
 
         acceptPacket(PacketAcceptor.accept(Packets.PLAYER_INFO));
     }
@@ -65,7 +67,7 @@ public class SkinChangerTask extends AbstractTask {
                     !player.get("name")
                            .getAs(VariableEntry.class)
                            .getValueAs(String.class)
-                           .equals(this.fetchValue.get())
+                           .equals(this.targetUsername.get())
             ) {
                 continue;
             }
@@ -77,15 +79,31 @@ public class SkinChangerTask extends AbstractTask {
             }
 
             ArrayEntry properties = player.get("properties").getAs(ArrayEntry.class);
+            
+            EntryList texturesEntryList = new EntryList();
+            texturesEntryList.add(new VariableEntry("name", "textures"));
+            texturesEntryList.add(new VariableEntry("value", cachedSkinData[0]));
+            texturesEntryList.add(new VariableEntry("is_signed", 1));
+            texturesEntryList.add(new VariableEntry("signature", cachedSkinData[1]));
 
             // we look through each properties for the textures property
             properties.forEach(property -> {
                 if (property.get("name").getAs(VariableEntry.class).getValueAs(String.class).equals("textures")) {
-                    property.get("value").getAs(VariableEntry.class).setValue(cachedSkinData[0]);
-                    property.get("signature").getAs(VariableEntry.class).setValue(cachedSkinData[1]);
+                    property = texturesEntryList;
+                    this.hasSkinBeenChanged = true;
                 }
             });
+
+            if (!this.hasSkinBeenChanged) {
+                properties.add(texturesEntryList);
+
+                VarInt numberOfProperties = player.get("number_of_properties").getAs(VariableEntry.class).getValueAs(VarInt.class);
+                numberOfProperties.setValue(numberOfProperties.getValue() + 1);
+            }
         }
+
+        // resetting the boolean to false so we're prepared for a possible next edit
+        this.hasSkinBeenChanged = false;
     }
 
     @Override
