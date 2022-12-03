@@ -6,7 +6,6 @@ import fr.rader.imbob.packets.Packet;
 import fr.rader.imbob.packets.PacketAcceptor;
 import fr.rader.imbob.packets.Packets;
 import fr.rader.imbob.protocol.Protocol;
-import fr.rader.imbob.protocol.ProtocolVersion;
 import fr.rader.imbob.psl.packets.serialization.entries.VariableEntry;
 import fr.rader.imbob.tasks.AbstractTask;
 import fr.rader.imbob.tasks.annotations.Task;
