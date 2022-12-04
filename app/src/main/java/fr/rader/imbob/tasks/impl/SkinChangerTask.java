@@ -55,8 +55,8 @@ public class SkinChangerTask extends AbstractTask {
         }
 
         // we get the skin data from mojang's servers
-        if (cachedSkinData == null) {
-            cachedSkinData = MojangAPI.getSkinData(this.fetchValue.get());
+        if (this.cachedSkinData == null) {
+            this.cachedSkinData = MojangAPI.getSkinData(this.fetchValue.get());
         }
 
         ArrayEntry players = packet.getEntry("players").getAs(ArrayEntry.class);
@@ -73,28 +73,30 @@ public class SkinChangerTask extends AbstractTask {
             }
 
             // if the user doesn't exist, we print an error message and return
-            if (cachedSkinData == null) {
+            if (this.cachedSkinData == null) {
                 LoggerWindow.error("User \"" + this.fetchValue.get() + "\" does not exist.");
                 return;
             }
 
             ArrayEntry properties = player.get("properties").getAs(ArrayEntry.class);
-            
-            EntryList texturesEntryList = new EntryList();
-            texturesEntryList.add(new VariableEntry("name", "textures"));
-            texturesEntryList.add(new VariableEntry("value", cachedSkinData[0]));
-            texturesEntryList.add(new VariableEntry("is_signed", 1));
-            texturesEntryList.add(new VariableEntry("signature", cachedSkinData[1]));
 
             // we look through each properties for the textures property
             properties.forEach(property -> {
                 if (property.get("name").getAs(VariableEntry.class).getValueAs(String.class).equals("textures")) {
-                    property = texturesEntryList;
+                    property.get("value").getAs(VariableEntry.class).setValue(this.cachedSkinData[0]);
+                    property.get("signature").getAs(VariableEntry.class).setValue(this.cachedSkinData[1]);
+
                     this.hasSkinBeenChanged = true;
                 }
             });
 
             if (!this.hasSkinBeenChanged) {
+                EntryList texturesEntryList = new EntryList();
+                texturesEntryList.add(new VariableEntry("name", "textures"));
+                texturesEntryList.add(new VariableEntry("value", this.cachedSkinData[0]));
+                texturesEntryList.add(new VariableEntry("is_signed", 1));
+                texturesEntryList.add(new VariableEntry("signature", this.cachedSkinData[1]));
+
                 properties.add(texturesEntryList);
 
                 VarInt numberOfProperties = player.get("number_of_properties").getAs(VariableEntry.class).getValueAs(VarInt.class);
