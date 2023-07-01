@@ -51,13 +51,7 @@ public class DataReader {
     }
 
     public boolean readBoolean() {
-        int value = readByte();
-
-        if (value <= 1) {
-            return value == 1;
-        }
-
-        throw new IllegalStateException("Boolean value above 1: " + value);
+        return readByte() != 0;
     }
 
     public int readByte() {
