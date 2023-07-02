@@ -14,7 +14,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.UUID;
 
-public class DataReader {
+public class DataReader implements AutoCloseable {
 
     private InputStream inputStream;
 
@@ -294,15 +294,12 @@ public class DataReader {
         }
     }
 
-    public void close() {
+    @Override
+    public void close() throws IOException {
         if (this.inputStream == null) {
             return;
         }
 
-        try {
-            this.inputStream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        this.inputStream.close();
     }
 }

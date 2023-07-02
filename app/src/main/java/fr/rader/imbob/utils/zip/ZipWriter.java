@@ -14,7 +14,7 @@ import java.util.zip.ZipOutputStream;
 
 import fr.rader.imbob.windows.impl.LoggerWindow;
 
-public class ZipWriter {
+public class ZipWriter implements AutoCloseable {
 
     private static final String TEMP_ZIP_PREFIX = "imbob-zip";
 
@@ -78,6 +78,7 @@ public class ZipWriter {
         this.zipOutputStream.closeEntry();
     }
 
+    @Override
     public void close() throws IOException {
         if (this.isCreatingEntry) {
             LoggerWindow.error("Cannot close ZIP when creating Entry");

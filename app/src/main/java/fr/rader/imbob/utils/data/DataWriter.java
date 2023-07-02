@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class DataWriter {
+public class DataWriter implements AutoCloseable {
 
     private static final int BUFFER_SIZE = 16384;
 
@@ -131,14 +131,14 @@ public class DataWriter {
     public void writePosition(Position position) {
         if (position.getProtocol().isBeforeExclusive(ProtocolVersion.get("MC_1_14"))) {
             writeLong(
-                    ((position.getX() & 0x3ffffff) << 38) |
-                    ((position.getY() & 0xfff) << 26) |
+                    ((long) (position.getX() & 0x3ffffff) << 38) |
+                    ((long) (position.getY() & 0xfff) << 26) |
                     (position.getZ() & 0x3ffffff)
             );
         } else {
             writeLong(
-                    ((position.getX() & 0x3ffffff) << 38) |
-                    ((position.getZ() & 0x3ffffff) << 12) |
+                    ((long) (position.getX() & 0x3ffffff) << 38) |
+                    ((long) (position.getZ() & 0x3ffffff) << 12) |
                     (position.getY() & 0xfff)
             );
         }
@@ -208,6 +208,10 @@ public class DataWriter {
     }
 
     public void flush() {
+        if (this.outputStream == null) {
+            return;
+        }
+
         try {
             this.outputStream.write(buffer, 0, index);
             this.outputStream.flush();
@@ -220,5 +224,12 @@ public class DataWriter {
 
     public List<Byte> getData() {
         return this.data;
+    }
+
+    @Override
+    public void close() throws IOException {
+        if (this.outputStream != null) {
+            this.outputStream.close();
+        }
     }
 }
