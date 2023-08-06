@@ -77,7 +77,7 @@ public class TagByteArray extends TagBase {
     }
 
     private void validateIndex(String method, int index) {
-        if (this.value.size() == 0) {
+        if (this.value.isEmpty()) {
             throw new IndexOutOfBoundsException("[TagByteArray] -> [#" + method + "] cannot replace value in an empty list (index is " + index + ")");
         }
 

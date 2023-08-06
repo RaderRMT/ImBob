@@ -1,8 +1,7 @@
 package fr.rader.imbob.packets;
 
+import fr.rader.imbob.packets.data.DataBlock;
 import fr.rader.imbob.protocol.Protocol;
-import fr.rader.imbob.psl.packets.serialization.entries.PacketEntry;
-import fr.rader.imbob.psl.packets.serialization.utils.EntryList;
 import fr.rader.imbob.types.VarInt;
 
 public class Packet {
@@ -10,14 +9,15 @@ public class Packet {
     private final Protocol protocolVersion;
     private final VarInt packetId;
 
-    private EntryList entries;
+    private final DataBlock data;
+
     private String packetName;
 
-    public Packet(Protocol protocolVersion, VarInt packetId) {
+    public Packet(final Protocol protocolVersion, final VarInt packetId) {
         this.protocolVersion = protocolVersion;
         this.packetId = packetId;
 
-        this.entries = new EntryList();
+        this.data = new DataBlock();
     }
 
     public Protocol getProtocol() {
@@ -32,52 +32,26 @@ public class Packet {
         return this.packetName;
     }
 
-    public void setPacketName(String packetName) {
+    public void setPacketName(final String packetName) {
         this.packetName = packetName;
     }
 
-    /**
-     * Add an entry to our packet, this will be added to the end of the list
-     *
-     * @param entry the entry to add
-     */
-    public void addEntry(PacketEntry entry) {
-        this.entries.add(entry);
+    public void add(final String name, final Object value) {
+        this.data.add(name, value);
     }
 
-    /**
-     * Replace the entire list of packet entries with the one given as a parameter
-     *
-     * @param entry the new entries
-     */
-    public void setEntry(EntryList entry) {
-        this.entries = entry;
+    public void update(final String name, final Object value) {
+        this.data.update(name, value);
     }
 
-    public PacketEntry getEntry(String entryName) {
-        for (PacketEntry entry : this.entries) {
-            if (entry.getName().equals(entryName)) {
-                return entry;
-            }
-        }
-
-        return null;
-    }
-
-    public EntryList getEntries() {
-        return this.entries;
+    public <T> T get(final String name, final Class<T> clazz) {
+        return this.data.get(name, clazz);
     }
 
     public boolean isEmpty() {
-        return this.entries.isEmpty();
+        return this.data.isEmpty();
     }
-    
-    /**
-     * Clones this {@link Packet}.
-     * It does not clone the entries contained in the packet.
-     *
-     * @return  The cloned packet
-     */
+
     public Packet cloneEmpty() {
         Packet clonedPacket = new Packet(this.protocolVersion, this.packetId);
         clonedPacket.setPacketName(this.packetName);
@@ -85,16 +59,13 @@ public class Packet {
         return clonedPacket;
     }
 
-    /**
-     * Clones this {@link Packet}.
-     *
-     * @return  The cloned packet
-     */
-    public Packet clone() {
-        Packet clonedPacket = cloneEmpty();
-        clonedPacket.setEntry(this.getEntries());
-        clonedPacket.setPacketName(this.packetName);
-
-        return clonedPacket;
+    @Override
+    public String toString() {
+        return "NewPacket{" +
+                "protocolVersion=" + protocolVersion +
+                ", packetId=" + packetId +
+                ", data=" + data +
+                ", packetName='" + packetName + '\'' +
+                '}';
     }
 }

@@ -4,22 +4,22 @@ import fr.rader.imbob.protocol.Protocol;
 
 public class PacketAcceptor {
 
-    private final PacketData packetToAccept;
+    private final PacketMetaData packetToAccept;
 
     private Protocol fromVersion;
     private Protocol toVersion;
 
-    private PacketAcceptor(PacketData packet) {
+    private PacketAcceptor(final PacketMetaData packet) {
         this.packetToAccept = packet;
     }
 
     /**
-     * Create a new {@link PacketAcceptor} for the given {@link PacketData}
+     * Create a new {@link PacketAcceptor} for the given {@link PacketMetaData}
      *
      * @param packet    The packet to accept
-     * @return          A new {@link PacketAcceptor} for the {@link PacketData}
+     * @return          A new {@link PacketAcceptor} for the {@link PacketMetaData}
      */
-    public static PacketAcceptor accept(PacketData packet) {
+    public static PacketAcceptor accept(final PacketMetaData packet) {
         return new PacketAcceptor(packet);
     }
 
@@ -29,7 +29,7 @@ public class PacketAcceptor {
      * @param fromVersion       The version to accept the packet from
      * @return                  The {@link PacketAcceptor} instance to chain methods
      */
-    public PacketAcceptor from(Protocol fromVersion) {
+    public PacketAcceptor from(final Protocol fromVersion) {
         this.fromVersion = fromVersion;
         return this;
     }
@@ -40,36 +40,36 @@ public class PacketAcceptor {
      * @param toVersion         The version to accept the packet up to
      * @return                  The {@link PacketAcceptor} instance to chain methods
      */
-    public PacketAcceptor to(Protocol toVersion) {
+    public PacketAcceptor to(final Protocol toVersion) {
         this.toVersion = toVersion;
         return this;
     }
 
     /**
      * Accepts a packet.<br>
-     * A packet is accepted if its protocol version is between {@link PacketAcceptor#fromVersion} and {@link PacketAcceptor#toVersion}, and if the packet id is accepted by the {@link PacketData}.<br>
-     * If {@link PacketAcceptor#fromVersion} is null, any packet from protocol {@link Protocol#MC_1_8} up to {@link PacketAcceptor#toVersion} are accepted.<br>
+     * A packet is accepted if its protocol version is between {@link PacketAcceptor#fromVersion} and {@link PacketAcceptor#toVersion}, and if the packet id is accepted by the {@link PacketMetaData}.<br>
+     * If {@link PacketAcceptor#fromVersion} is null, any packet up to {@link PacketAcceptor#toVersion} are accepted.<br>
      * If {@link PacketAcceptor#toVersion} is null, any packet from {@link PacketAcceptor#fromVersion} and later are accepted.<br>
      * If both {@link PacketAcceptor#fromVersion} and {@link PacketAcceptor#toVersion} are null, the packet will be accepted.<br>
      *
      * @param packet    The packet to accept
      * @return          True if the packet is accepted, false otherwise
      */
-    public boolean accept(Packet packet) {
-        if (this.fromVersion != null && this.toVersion != null) {
-            return packet.getProtocol().isAfterInclusive(this.fromVersion) &&
-                   packet.getProtocol().isBeforeInclusive(this.toVersion) &&
-                   this.packetToAccept.accept(packet);
-        }
-
-        if (this.fromVersion == null && this.toVersion != null) {
-            return packet.getProtocol().isBeforeInclusive(this.toVersion) &&
-                   this.packetToAccept.accept(packet);
-        }
-
-        if (this.fromVersion != null && this.toVersion == null) {
-            return packet.getProtocol().isAfterInclusive(this.fromVersion) &&
-                   this.packetToAccept.accept(packet);
+    public boolean accept(final Packet packet) {
+        if (this.toVersion != null) {
+            if (this.fromVersion != null) {
+                return packet.getProtocol().isAfterInclusive(this.fromVersion) &&
+                        packet.getProtocol().isBeforeInclusive(this.toVersion) &&
+                        this.packetToAccept.accept(packet);
+            } else {
+                return packet.getProtocol().isBeforeInclusive(this.toVersion) &&
+                        this.packetToAccept.accept(packet);
+            }
+        } else {
+            if (this.fromVersion != null) {
+                return packet.getProtocol().isAfterInclusive(this.fromVersion) &&
+                        this.packetToAccept.accept(packet);
+            }
         }
 
         return this.packetToAccept.accept(packet);

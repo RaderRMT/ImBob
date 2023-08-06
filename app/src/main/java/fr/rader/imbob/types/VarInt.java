@@ -2,17 +2,17 @@ package fr.rader.imbob.types;
 
 public class VarInt {
 
-    private int value = 0;
+    private int value;
 
     public VarInt(int value) {
         this.value = value;
     }
 
-    public int getValue() {
+    public int get() {
         return this.value;
     }
 
-    public void setValue(int value) {
+    public void set(int value) {
         this.value = value;
     }
 

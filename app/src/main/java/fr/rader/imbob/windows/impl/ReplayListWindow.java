@@ -41,8 +41,6 @@ public class ReplayListWindow extends AbstractWindow {
         this.progressBar = getWindowManager().getWindowByClass(ProgressBarWindow.class);
 
         this.fileExplorer = getWindowManager().getWindowByClass(FileExplorerWindow.class);
-        this.fileExplorer.setExtensions(new String[] { ".mcpr" });
-        this.fileExplorer.setMultipleFileSelect(true);
     }
 
     @Override
@@ -56,7 +54,7 @@ public class ReplayListWindow extends AbstractWindow {
         // we create a button to add a replay.
         // all this does is showing the file explorer
         if (ImGui.button("Add Replay...")) {
-            this.fileExplorer.setVisible(true);
+            this.fileExplorer.open();
         }
 
         // we get the selected files from the file explorer
@@ -127,7 +125,7 @@ public class ReplayListWindow extends AbstractWindow {
         ImGui.beginDisabled(this.replays.isEmpty() || this.taskListWindow.getTasks().isEmpty());
         // if we click on the Edit All button and
         // have at least one replay in the replay list
-        if (ImGui.button("Edit All") && this.replays.size() > 0) {
+        if (ImGui.button("Edit All") && !this.replays.isEmpty()) {
             // then we move the replays to
             // the imbob folder and we edit them
             moveAndEditReplays(this.replays.toArray(new File[0]));

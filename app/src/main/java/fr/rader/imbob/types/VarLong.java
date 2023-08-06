@@ -8,11 +8,11 @@ public class VarLong {
         this.value = value;
     }
 
-    public long getValue() {
+    public long get() {
         return value;
     }
 
-    public void setValue(long value) {
+    public void set(long value) {
         this.value = value;
     }
 

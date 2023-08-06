@@ -6,10 +6,10 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import fr.rader.imbob.utils.json.JsonUtils;
 import fr.rader.imbob.windows.impl.LoggerWindow;
 
 public class MojangAPI {
@@ -35,7 +35,7 @@ public class MojangAPI {
         String[] out = new String[2];
 
         String data = getDataFromMojang(MOJANG_API_SESSION_PROFILE, uuid + "?unsigned=false"); // we add ?unsigned=false to the argument because we want to get the signature for the skin
-        JsonObject root = new Gson().fromJson(data, JsonObject.class);
+        JsonObject root = JsonUtils.fromString(data, JsonObject.class);
 
         JsonArray properties = root.getAsJsonArray("properties");
         for (JsonElement element : properties) {
@@ -70,7 +70,8 @@ public class MojangAPI {
             return null;
         }
 
-        return new Gson().fromJson(uuid, JsonObject.class).get("id").getAsString();
+        JsonObject object = JsonUtils.fromString(uuid, JsonObject.class);
+        return object.get("id").getAsString();
     }
 
     /**

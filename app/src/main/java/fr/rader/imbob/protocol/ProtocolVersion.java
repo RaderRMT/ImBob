@@ -1,13 +1,10 @@
 package fr.rader.imbob.protocol;
 
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.gson.Gson;
-
 import fr.rader.imbob.utils.OS;
+import fr.rader.imbob.utils.json.JsonUtils;
 
 public class ProtocolVersion {
 
@@ -19,20 +16,8 @@ public class ProtocolVersion {
         this.protocolVersions = new ArrayList<>();
     }
 
-    public static ProtocolVersion getInstance() {
-        if (instance == null) {
-            try (FileReader reader = new FileReader(OS.getAssetsFolder() + "protocol_versions.json")) {
-                instance = new Gson().fromJson(reader, ProtocolVersion.class);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return instance;
-    }
-
-    public static final Protocol get(String protocolVersion) {
-        for (Protocol protocol : getInstance().protocolVersions) {
+    public Protocol get(String protocolVersion) {
+        for (Protocol protocol : this.protocolVersions) {
             if (protocol.getName().equals(protocolVersion)) {
                 return protocol;
             }
@@ -41,14 +26,22 @@ public class ProtocolVersion {
         return null;
     }
 
-    public static final Protocol getFromId(int id) {
-        for (Protocol protocol : getInstance().protocolVersions) {
+    public Protocol getFromId(int id) {
+        for (Protocol protocol : this.protocolVersions) {
             if (protocol.getVersion() == id) {
                 return protocol;
             }
         }
 
         return null;
+    }
+
+    public static ProtocolVersion getInstance() {
+        if (instance == null) {
+            instance = JsonUtils.fromFile(OS.getAssetsFolder() + "protocol_versions.json", ProtocolVersion.class);
+        }
+
+        return instance;
     }
 }
 

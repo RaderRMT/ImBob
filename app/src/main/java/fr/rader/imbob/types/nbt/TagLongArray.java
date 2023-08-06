@@ -77,7 +77,7 @@ public class TagLongArray extends TagBase {
     }
 
     private void validateIndex(String method, int index) {
-        if (this.value.size() == 0) {
+        if (this.value.isEmpty()) {
             throw new IndexOutOfBoundsException("[TagLongArray] -> [#" + method + "] cannot get value in an empty list (index is " + index + ")");
         }
 

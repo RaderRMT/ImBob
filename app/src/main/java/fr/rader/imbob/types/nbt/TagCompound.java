@@ -3,7 +3,6 @@ package fr.rader.imbob.types.nbt;
 import fr.rader.imbob.utils.data.DataReader;
 import fr.rader.imbob.utils.data.DataWriter;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,14 +31,10 @@ public class TagCompound extends TagBase {
 
         this.tags = new ArrayList<>();
 
-        try {
-            readCompound(reader);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        readCompound(reader);
     }
 
-    private void readCompound(DataReader reader) throws IOException {
+    private void readCompound(DataReader reader) {
         while (true) {
             int tagID = reader.readByte();
             if (tagID == 0) {
@@ -167,7 +162,7 @@ public class TagCompound extends TagBase {
     }
 
     public boolean isEmpty() {
-        return tags.size() == 0;
+        return tags.isEmpty();
     }
 
     public int size() {
@@ -179,7 +174,7 @@ public class TagCompound extends TagBase {
     }
 
     private void validateIndex(String method, int index) {
-        if (this.tags.size() == 0) {
+        if (isEmpty()) {
             throw new IndexOutOfBoundsException("[TagCompound] -> [#" + method + "] cannot replace value in an empty list (index is " + index + ")");
         }
 

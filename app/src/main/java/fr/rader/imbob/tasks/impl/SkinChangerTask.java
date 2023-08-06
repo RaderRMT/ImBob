@@ -5,9 +5,9 @@ import java.util.Queue;
 import fr.rader.imbob.packets.Packet;
 import fr.rader.imbob.packets.PacketAcceptor;
 import fr.rader.imbob.packets.Packets;
-import fr.rader.imbob.psl.packets.serialization.entries.ArrayEntry;
-import fr.rader.imbob.psl.packets.serialization.entries.VariableEntry;
-import fr.rader.imbob.psl.packets.serialization.utils.EntryList;
+import fr.rader.imbob.packets.data.DataBlock;
+import fr.rader.imbob.packets.data.DataBlockArray;
+import fr.rader.imbob.protocol.ProtocolVersion;
 import fr.rader.imbob.tasks.AbstractTask;
 import fr.rader.imbob.tasks.annotations.Task;
 import fr.rader.imbob.types.VarInt;
@@ -26,6 +26,7 @@ import imgui.type.ImString;
 public class SkinChangerTask extends AbstractTask {
 
     private static final int ACTION_ADD_PLAYER = 0;
+    private static final int ACTION_ADD_PLAYER_BIT = 0x01;
 
     private final ImString targetUsername;
     private final ImString fetchValue;
@@ -41,12 +42,65 @@ public class SkinChangerTask extends AbstractTask {
         acceptPacket(PacketAcceptor.accept(Packets.get("player_info")));
     }
 
-    @Override
-    protected void execute(Packet packet, Queue<Packet> packets) {
-        int action = packet.getEntry("action")
-                           .getAs(VariableEntry.class)
-                           .getValueAs(VarInt.class)
-                           .getValue();
+    private void edit761(final Packet packet) {
+        int actionBitfield = packet.get("action", Integer.class);
+
+        // we only edit packets with the ACTION_ADD_PLAYER action because
+        // the other actions don't have the textures property field
+        if ((actionBitfield & ACTION_ADD_PLAYER_BIT) == 0) {
+            return;
+        }
+
+        // we get the skin data from mojang's servers
+        if (this.cachedSkinData == null) {
+            this.cachedSkinData = MojangAPI.getSkinData(this.fetchValue.get());
+        }
+
+        DataBlockArray players = packet.get("actions", DataBlockArray.class);
+        for (DataBlock action : players) {
+            if (!action.contains("name")) {
+                continue;
+            }
+
+            // we loop through each players in this packet and
+            // we skip the user if it isn't the one we want to edit
+            if (!action.get("name", String.class).equals(this.targetUsername.get())) {
+                continue;
+            }
+
+            // if the user doesn't exist, we print an error message and return
+            if (this.cachedSkinData == null) {
+                LoggerWindow.error("User \"" + this.fetchValue.get() + "\" does not exist.");
+                return;
+            }
+
+            DataBlockArray properties = action.get("properties", DataBlockArray.class);
+
+            // we look through each properties for the textures property
+            properties.forEach(property -> {
+                if (property.get("name", String.class).equals("textures")) {
+                    property.get("value").setValue(this.cachedSkinData[0]);
+                    property.get("signature").setValue(this.cachedSkinData[1]);
+
+                    this.hasSkinBeenChanged = true;
+                }
+            });
+
+            if (!this.hasSkinBeenChanged) {
+                DataBlock texturesEntryList = properties.create();
+                texturesEntryList.add("name", "textures");
+                texturesEntryList.add("value", this.cachedSkinData[0]);
+                texturesEntryList.add("is_signed", true);
+                texturesEntryList.add("signature", this.cachedSkinData[1]);
+            }
+        }
+
+        // resetting the boolean to false so we're prepared for a possible next edit
+        this.hasSkinBeenChanged = false;
+    }
+
+    private void edit(final Packet packet) {
+        int action = packet.get("action", VarInt.class).get();
 
         // we only edit packets with the ACTION_ADD_PLAYER action because
         // the other actions don't have the textures property field
@@ -59,16 +113,11 @@ public class SkinChangerTask extends AbstractTask {
             this.cachedSkinData = MojangAPI.getSkinData(this.fetchValue.get());
         }
 
-        ArrayEntry players = packet.getEntry("players").getAs(ArrayEntry.class);
-        for (EntryList player : players) {
+        DataBlockArray players = packet.get("players", DataBlockArray.class);
+        for (DataBlock player : players) {
             // we loop through each players in this packet and
             // we skip the user if it isn't the one we want to edit
-            if (
-                    !player.get("name")
-                           .getAs(VariableEntry.class)
-                           .getValueAs(String.class)
-                           .equals(this.targetUsername.get())
-            ) {
+            if (!player.get("name", String.class).equals(this.targetUsername.get())) {
                 continue;
             }
 
@@ -78,34 +127,41 @@ public class SkinChangerTask extends AbstractTask {
                 return;
             }
 
-            ArrayEntry properties = player.get("properties").getAs(ArrayEntry.class);
+            DataBlockArray properties = player.get("properties", DataBlockArray.class);
 
             // we look through each properties for the textures property
             properties.forEach(property -> {
-                if (property.get("name").getAs(VariableEntry.class).getValueAs(String.class).equals("textures")) {
-                    property.get("value").getAs(VariableEntry.class).setValue(this.cachedSkinData[0]);
-                    property.get("signature").getAs(VariableEntry.class).setValue(this.cachedSkinData[1]);
+                if (property.get("name", String.class).equals("textures")) {
+                    property.get("value").setValue(this.cachedSkinData[0]);
+                    property.get("signature").setValue(this.cachedSkinData[1]);
 
                     this.hasSkinBeenChanged = true;
                 }
             });
 
             if (!this.hasSkinBeenChanged) {
-                EntryList texturesEntryList = new EntryList();
-                texturesEntryList.add(new VariableEntry("name", "textures"));
-                texturesEntryList.add(new VariableEntry("value", this.cachedSkinData[0]));
-                texturesEntryList.add(new VariableEntry("is_signed", 1));
-                texturesEntryList.add(new VariableEntry("signature", this.cachedSkinData[1]));
+                DataBlock texturesEntryList = properties.create();
+                texturesEntryList.add("name", "textures");
+                texturesEntryList.add("value", this.cachedSkinData[0]);
+                texturesEntryList.add("is_signed", true);
+                texturesEntryList.add("signature", this.cachedSkinData[1]);
 
-                properties.add(texturesEntryList);
-
-                VarInt numberOfProperties = player.get("number_of_properties").getAs(VariableEntry.class).getValueAs(VarInt.class);
-                numberOfProperties.setValue(numberOfProperties.getValue() + 1);
+                VarInt numberOfProperties = player.get("number_of_properties", VarInt.class);
+                numberOfProperties.set(numberOfProperties.get() + 1);
             }
         }
 
         // resetting the boolean to false so we're prepared for a possible next edit
         this.hasSkinBeenChanged = false;
+    }
+
+    @Override
+    protected void execute(Packet packet, Queue<Packet> packets) {
+        if (packet.getProtocol().isAfterInclusive(ProtocolVersion.getInstance().get("MC_1_19_3"))) {
+            edit761(packet);
+        } else {
+            edit(packet);
+        }
     }
 
     @Override

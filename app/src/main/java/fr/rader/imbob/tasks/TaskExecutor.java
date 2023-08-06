@@ -2,24 +2,19 @@ package fr.rader.imbob.tasks;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
 
+import bsh.EvalError;
+import bsh.Interpreter;
 import fr.rader.imbob.packets.Packet;
+import fr.rader.imbob.packets.Packets;
 import fr.rader.imbob.protocol.Protocol;
-import fr.rader.imbob.psl.packets.definition.PacketDefinition;
-import fr.rader.imbob.psl.packets.definition.PacketDefinitionFactory;
-import fr.rader.imbob.psl.packets.serialization.PacketDeserializer;
-import fr.rader.imbob.psl.packets.serialization.PacketSerializer;
 import fr.rader.imbob.replay.ReplayMetaData;
 import fr.rader.imbob.types.VarInt;
 import fr.rader.imbob.utils.data.DataReader;
 import fr.rader.imbob.utils.data.DataWriter;
-import fr.rader.imbob.utils.data.ListUtils;
 import fr.rader.imbob.utils.zip.ZipReader;
 import fr.rader.imbob.utils.zip.ZipWriter;
 import fr.rader.imbob.windows.impl.LoggerWindow;
@@ -35,16 +30,36 @@ public class TaskExecutor {
     private final List<AbstractTask> tasks;
     private final List<File> replays;
 
-    private final Map<Integer, PacketDefinition> packetDefinitions;
+    private final Interpreter interpreter;
 
     public TaskExecutor(List<AbstractTask> tasks, List<File> replays, ProgressBarWindow progressBar) {
-        Collections.sort(tasks, (o1, o2) -> o2.getPriority() - o1.getPriority());
+        tasks.sort((o1, o2) -> o2.getPriority() - o1.getPriority());
 
         this.tasks = tasks;
         this.replays = replays;
         this.progressBar = progressBar;
 
-        this.packetDefinitions = new HashMap<>();
+        this.interpreter = new Interpreter();
+        this.interpreter.setStrictJava(true);
+        this.interpreter.getNameSpace().importClass("fr.rader.imbob.types.VarInt");
+        this.interpreter.getNameSpace().importClass("fr.rader.imbob.types.VarLong");
+        this.interpreter.getNameSpace().importClass("fr.rader.imbob.types.Position");
+        this.interpreter.getNameSpace().importClass("fr.rader.imbob.types.nbt.TagBase");
+        this.interpreter.getNameSpace().importClass("fr.rader.imbob.types.nbt.TagByte");
+        this.interpreter.getNameSpace().importClass("fr.rader.imbob.types.nbt.TagByteArray");
+        this.interpreter.getNameSpace().importClass("fr.rader.imbob.types.nbt.TagCompound");
+        this.interpreter.getNameSpace().importClass("fr.rader.imbob.types.nbt.TagDouble");
+        this.interpreter.getNameSpace().importClass("fr.rader.imbob.types.nbt.TagFloat");
+        this.interpreter.getNameSpace().importClass("fr.rader.imbob.types.nbt.TagInt");
+        this.interpreter.getNameSpace().importClass("fr.rader.imbob.types.nbt.TagIntArray");
+        this.interpreter.getNameSpace().importClass("fr.rader.imbob.types.nbt.TagList");
+        this.interpreter.getNameSpace().importClass("fr.rader.imbob.types.nbt.TagLong");
+        this.interpreter.getNameSpace().importClass("fr.rader.imbob.types.nbt.TagLongArray");
+        this.interpreter.getNameSpace().importClass("fr.rader.imbob.types.nbt.TagShort");
+        this.interpreter.getNameSpace().importClass("fr.rader.imbob.types.nbt.TagString");
+        this.interpreter.getNameSpace().importClass("fr.rader.imbob.packets.data.Data");
+        this.interpreter.getNameSpace().importClass("fr.rader.imbob.packets.data.DataBlock");
+        this.interpreter.getNameSpace().importClass("fr.rader.imbob.packets.data.DataBlockArray");
     }
 
     /**
@@ -54,23 +69,17 @@ public class TaskExecutor {
      * Once editing is done, user inputs will be unlocked.
      */
     public void applyAllTaskEdits() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                ImGuiIO io = ImGui.getIO();
-                // disable any user inputs
-                io.setConfigFlags(ImGuiConfigFlags.NavNoCaptureKeyboard | ImGuiConfigFlags.NoMouse);
+        new Thread(() -> {
+            ImGuiIO io = ImGui.getIO();
+            // disable any user inputs
+            io.setConfigFlags(ImGuiConfigFlags.NavNoCaptureKeyboard | ImGuiConfigFlags.NoMouse);
 
-                // show the progress bar
-                progressBar.setVisible(true);
-                // do the edits
-                replays.forEach(replay -> {
-                    progressBar.setProgress(0f);
-                    applyTaskEdits(replay);
-                });
+            // show the progress bar
+            this.progressBar.setVisible(true);
+            // do the edits
+            this.replays.forEach(this::applyTaskEdits);
 
-                returnUserControl();
-            }
+            returnUserControl();
         }).start();
     }
 
@@ -79,36 +88,33 @@ public class TaskExecutor {
      * This method is private because applyAllTaskEdits can be used for a single replay
      *
      * @param replay    The replay to edit
-     * @throws IOException
      */
     private void applyTaskEdits(File replay) {
+        this.progressBar.setProgress(0f);
         this.progressBar.setLabel("Editing " + replay.getName() + "...");
-        // clearing the packet definitions list so
-        // we can chain multiple applyTaskEdits calls
-        this.packetDefinitions.clear();
 
-        try {
-            ZipReader zipReader = new ZipReader(replay);
+        try (
+                ZipReader zipReader = new ZipReader(replay);
+                DataReader reader = new DataReader(zipReader.getEntryAsStream("recording.tmcpr"))
+        ) {
             ZipWriter zipWriter = new ZipWriter(replay);
-
-            ReplayMetaData metaData = new ReplayMetaData(zipReader.getEntryAsStream("metaData.json"));
-
-            DataReader reader = new DataReader(zipReader.getEntryAsStream("recording.tmcpr"));
             DataWriter writer = new DataWriter(zipWriter.createEntry("recording.tmcpr"));
 
-            // we ignore the first packet
-            writer.writeInt(reader.readInt());
-            int size = reader.readInt();
-            writer.writeInt(size);
-            writer.writeByteArray(reader.readFollowingBytes(size));
+            ignoreLoginSuccess(reader, writer);
 
-            PacketSerializer serializer = new PacketSerializer();
-            PacketDeserializer deserializer = new PacketDeserializer();
-            deserializer.setDataReader(reader);
+            // give BeanShell the DataReader instance, so we can
+            // read data from the recording in packet definition scripts
+            this.interpreter.set("reader", reader);
+
+            ReplayMetaData metaData = ReplayMetaData.from(zipReader.getEntryAsStream("metaData.json"));
+            if (metaData.getProtocol() == null) {
+                LoggerWindow.warn(replay.getName() + " cannot be edited because its protocol isn't supported");
+                return;
+            }
+
+            Protocol protocol = metaData.getProtocol();
 
             Queue<Packet> packets = new LinkedList<>();
-
-            Protocol protocolVersion = metaData.getProtocol();
 
             while (reader.hasNext()) {
                 int timestamp = reader.readInt();
@@ -117,40 +123,30 @@ public class TaskExecutor {
 
                 this.progressBar.setProgress((float) timestamp / (float) metaData.getDuration());
 
-                Packet packet = new Packet(protocolVersion, packetId);
-                for (AbstractTask task : this.tasks) {
-                    if (!task.accept(packet)) {
-                        continue;
-                    }
+                Packet packet = new Packet(protocol, packetId);
+                List<AbstractTask> tasks = this.tasks.stream()
+                        .filter(task -> task.accept(packet))
+                        .toList();
 
+                for (AbstractTask task : tasks) {
                     if (packet.isEmpty()) {
-                        PacketDefinition definition = getPacketDefinition(protocolVersion, packetId);
-                        deserializer.deserialize(definition, packet);
+                        this.interpreter.set("packet", packet);
+
+                        packet.setPacketName(Packets.get(protocol, packet.getPacketId().get()).getName());
+                        deserializePacket(packet);
                     }
 
-                    packets.add(packet.clone());
+                    packets.add(packet);
                     task.execute(packet, packets);
                 }
 
                 if (packet.isEmpty()) {
                     writer.writeInt(timestamp);
                     writer.writeInt(packetSize);
-                    writer.writeVarInt(packetId.getValue());
+                    writer.writeVarInt(packetId.get());
                     writer.writeByteArray(reader.readFollowingBytes(packetSize - packetId.size()));
                 } else {
-                    while (!packets.isEmpty()) {
-                        Packet packetToWrite = packets.poll();
-                        VarInt packetIdToWrite = packetToWrite.getPacketId();
-
-                        PacketDefinition definition = getPacketDefinition(protocolVersion, packetIdToWrite);
-                        serializer.serialize(definition, packetToWrite);
-                        List<Byte> data = serializer.getData();
-
-                        writer.writeInt(timestamp);
-                        writer.writeInt(data.size() + packetIdToWrite.size());
-                        writer.writeVarInt(packetIdToWrite.getValue());
-                        writer.writeByteArray(ListUtils.toByteArray(data));
-                    }
+                    writePackets(timestamp, packets, writer);
                 }
             }
 
@@ -161,41 +157,68 @@ public class TaskExecutor {
 
             zipWriter.close();
 
-            reader.close();
-            zipReader.close();
-
             zipWriter.move();
-        } catch (IOException e) {
-            LoggerWindow.error("Error when editing " + replay.getName() + ": " + e.getMessage());
-            returnUserControl();
+        } catch (IOException | EvalError e) {
+            e.printStackTrace();
+            System.exit(0);
         }
     }
 
-    /**
-     * Get or create a {@link PacketDefinition} based on the given {@link Protocol},
-     * packet id and the current state of the packetDefinitions list.
-     *
-     * @param version   The replay {@link Protocol}
-     * @param packetId  The packet id
-     * @return          The {@link PacketDefinition} from the packetDefinitions list,
-     *                  or a new {@link PacketDefinition} if it isn't contained in the list
-     * @throws IOException If an I/O error occurs
-     */
-    private PacketDefinition getPacketDefinition(Protocol version, VarInt packetId) throws IOException {
-        // we create a new packet definition if the list
-        // doesn't contain the wanted packet definition
-        if (!this.packetDefinitions.containsKey(packetId.getValue())) {
-            this.packetDefinitions.put(
-                    packetId.getValue(),
-                    PacketDefinitionFactory.createPacketDefinition(
-                            version,
-                            packetId
-                    )
+    private void writePackets(final int timestamp, final Queue<Packet> packets, final DataWriter writer) {
+        while (!packets.isEmpty()) {
+            writePacket(
+                    timestamp,
+                    packets.poll(),
+                    writer
             );
         }
+    }
 
-        // we return the packet definition from the list
-        return this.packetDefinitions.get(packetId.getValue());
+    private void writePacket(final int timestamp, final Packet packet, final DataWriter recordingWriter) {
+        try (DataWriter writer = new DataWriter()) {
+            this.interpreter.set("writer", writer);
+            this.interpreter.set("packet", packet);
+
+            this.interpreter.source(Packets.getPSLWritePath(
+                    packet.getProtocol(),
+                    packet.getPacketId().get()
+            ));
+
+            recordingWriter.writeInt(timestamp);
+            recordingWriter.writeInt(writer.getData().size() + packet.getPacketId().size());
+            recordingWriter.writeVarInt(packet.getPacketId().get());
+            recordingWriter.writeByteList(writer.getData());
+        } catch (IOException | EvalError e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void deserializePacket(Packet packet) {
+        try {
+            this.interpreter.source(Packets.getPSLReadPath(
+                    packet.getProtocol(),
+                    packet.getPacketId().get()
+            ));
+        } catch (IOException | EvalError e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void ignoreLoginSuccess(final DataReader reader, final DataWriter writer) {
+        VarInt packetId;
+
+        do {
+            // timestamp
+            writer.writeInt(reader.readInt());
+
+            int size = reader.readInt();
+            writer.writeInt(size);
+
+            packetId = reader.readVarInt();
+            writer.writeVarInt(packetId.get());
+
+            writer.writeByteArray(reader.readFollowingBytes(size - packetId.size()));
+        } while (packetId.get() != 0x02); // todo: not hardcode 0x02
     }
 
     private void returnUserControl() {

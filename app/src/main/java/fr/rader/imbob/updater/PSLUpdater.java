@@ -1,18 +1,16 @@
 package fr.rader.imbob.updater;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import fr.rader.imbob.utils.OS;
 
+import fr.rader.imbob.utils.json.JsonUtils;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -75,26 +73,22 @@ public class PSLUpdater {
     }
 
     public void updateLatestVersionNumber() {
-        HttpURLConnection connection = null;
+        HttpURLConnection connection;
         try {
             connection = (HttpURLConnection) new URL(GITHUB_VERSION_PATH).openConnection();
         } catch (IOException e) {
             e.printStackTrace();
-
             return;
         }
 
-        JsonObject response = null;
-        try (
-                InputStream connectionStream = connection.getInputStream();
-                InputStreamReader streamReader = new InputStreamReader(connectionStream)
-        ) {
-            response = new Gson().fromJson(streamReader, JsonObject.class);
+        JsonObject response;
+        try (InputStream connectionStream = connection.getInputStream()) {
+            response = JsonUtils.fromStream(connectionStream, JsonObject.class);
         } catch (IOException e) {
             e.printStackTrace();
-
-            connection.disconnect();
             return;
+        } finally {
+            connection.disconnect();
         }
 
         this.githubVersion = response.get("version").getAsInt();
@@ -107,17 +101,7 @@ public class PSLUpdater {
             return;
         }
 
-        JsonObject response = null;
-
-        try (
-                FileReader streamReader = new FileReader(LOCAL_VERSION_PATH)
-        ) {
-            response = new Gson().fromJson(streamReader, JsonObject.class);
-        } catch (IOException e) {
-            e.printStackTrace();
-
-            return;
-        }
+        JsonObject response = JsonUtils.fromFile(LOCAL_VERSION_PATH, JsonObject.class);
 
         this.localVersion = response.get("version").getAsInt();
         this.localUpdateMessage = response.get("update_message").getAsString();

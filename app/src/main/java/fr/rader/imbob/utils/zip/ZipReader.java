@@ -5,12 +5,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 public class ZipReader extends ZipFile {
 
-    public ZipReader(File zip) throws ZipException, IOException {
+    public ZipReader(File zip) throws IOException {
         super(zip);
     }
 

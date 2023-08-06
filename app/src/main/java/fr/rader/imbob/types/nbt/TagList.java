@@ -3,7 +3,6 @@ package fr.rader.imbob.types.nbt;
 import fr.rader.imbob.utils.data.DataReader;
 import fr.rader.imbob.utils.data.DataWriter;
 
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Consumer;
@@ -13,39 +12,31 @@ public class TagList<T extends TagBase> extends TagBase implements Iterable<T> {
     public static final byte TAG_ID = 9;
 
     private final List<T> tags;
-
-    private byte childrenID;
+    private final byte childrenID;
 
     public TagList(Class<T> tagsClass) {
-        setID(TAG_ID);
-
-        this.childrenID = getIDFromClass(tagsClass);
-        this.tags = new ArrayList<>();
+        this(tagsClass, null);
     }
 
     public TagList(Class<T> tagsClass, String name) {
-        setID(TAG_ID);
-        setName(name);
-
-        this.childrenID = getIDFromClass(tagsClass);
-        this.tags = new ArrayList<>();
+        this(name, getIDFromClass(tagsClass));
     }
 
     public TagList(String name, DataReader reader) {
+        this(name, (byte) reader.readByte());
+
+        readList(reader);
+    }
+
+    private TagList(final String name, final byte childrenId) {
         setID(TAG_ID);
         setName(name);
 
         this.tags = new ArrayList<>();
-
-        try {
-            this.childrenID = (byte) reader.readByte();
-            readList(reader);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        this.childrenID = childrenId;
     }
 
-    private byte getIDFromClass(Class<T> tagClass) {
+    private static byte getIDFromClass(Class<?> tagClass) {
         try {
             Field field = tagClass.getField("TAG_ID");
             return field.getByte(field);
@@ -56,7 +47,7 @@ public class TagList<T extends TagBase> extends TagBase implements Iterable<T> {
         throw new IllegalStateException("Class \"" + tagClass.getSimpleName() + "\" does not contain a \"TAG_ID\" field.");
     }
 
-    private void readList(DataReader reader) throws IOException {
+    private void readList(DataReader reader) {
         int length = reader.readInt();
         for (int i = 0; i < length; i++) {
             switch (childrenID) {
@@ -161,7 +152,7 @@ public class TagList<T extends TagBase> extends TagBase implements Iterable<T> {
     }
 
     public boolean isEmpty() {
-        return tags.size() == 0;
+        return tags.isEmpty();
     }
 
     /**
@@ -181,7 +172,7 @@ public class TagList<T extends TagBase> extends TagBase implements Iterable<T> {
     }
 
     private void validateIndex(String method, int index) {
-        if (this.tags.size() == 0) {
+        if (this.tags.isEmpty()) {
             throw new IndexOutOfBoundsException("[TagList] -> [#" + method + "] cannot replace value in an empty list (index is " + index + ")");
         }
 

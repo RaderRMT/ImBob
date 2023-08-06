@@ -1,6 +1,5 @@
 package fr.rader.imbob.utils.data;
 
-import fr.rader.imbob.psl.tokens.TokenType;
 import fr.rader.imbob.types.Position;
 import fr.rader.imbob.types.VarInt;
 import fr.rader.imbob.types.VarLong;
@@ -144,10 +143,14 @@ public class DataReader implements AutoCloseable {
         return new VarLong(result);
     }
 
+    public String readString() {
+        return readString(readVarInt().get());
+    }
+
     public String readString(int length) {
         StringBuilder out = new StringBuilder();
 
-        while (length-- > 0) {
+        for (int i = 0; i < length; i++) {
             out.append(readChar());
         }
 
@@ -195,7 +198,7 @@ public class DataReader implements AutoCloseable {
         int y;
         int z;
 
-        if (protocolVersion.isBeforeExclusive(ProtocolVersion.get("MC_1_14"))) {
+        if (protocolVersion.isBeforeExclusive(ProtocolVersion.getInstance().get("MC_1_14"))) {
             x = (int) (positionValue >> 38);
             y = (int) (positionValue >> 26) & 0xfff;
             z = (int) (positionValue << 38 >> 38);
@@ -206,64 +209,6 @@ public class DataReader implements AutoCloseable {
         }
 
         return new Position(protocolVersion, x, y, z);
-    }
-
-    public Object readFromTokenType(TokenType type, Protocol protocolVersion) {
-        switch (type) {
-            case BOOLEAN:
-                return readBoolean() ? 1 : 0;
-
-            case BYTE:
-            case ANGLE:
-                return readByte();
-
-            case SHORT:
-                return readShort();
-
-            case INT:
-                return readInt();
-
-            case LONG:
-                return readLong();
-
-            case CHAT:
-            case STRING:
-                return readString(readVarInt().getValue());
-
-            case FLOAT:
-                return readFloat();
-
-            case DOUBLE:
-                return readDouble();
-
-            case VARINT:
-                return readVarInt();
-
-            case VARLONG:
-                return readVarLong();
-
-            /*
-             * TODO:
-             *  write the Metadata class
-             *  and the method to read it
-             *
-             * case METADATA:
-             *     return readMetadata();
-             */
-
-            case NBT:
-                return readNBT();
-            
-
-            case POSITION:
-                return readPosition(protocolVersion);
-
-            case UUID:
-                 return readUUID();
-
-            default:
-               throw new IllegalStateException("Unknown type: " + type.getFriendlyName());
-        }
     }
 
     public boolean hasNext() {

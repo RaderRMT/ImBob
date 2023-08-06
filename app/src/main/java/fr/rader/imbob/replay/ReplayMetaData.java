@@ -1,17 +1,10 @@
 package fr.rader.imbob.replay;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Map;
-
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 
 import fr.rader.imbob.protocol.Protocol;
 import fr.rader.imbob.protocol.ProtocolVersion;
-import fr.rader.imbob.utils.JsonUtils;
+import fr.rader.imbob.utils.json.JsonUtils;
 
 public class ReplayMetaData {
 
@@ -46,7 +39,7 @@ public class ReplayMetaData {
     private int fileFormatVersion;
 
     /** The Minecraft protocol version */
-    private Protocol protocol;
+    private int protocol;
 
     /** This is the name of the program
      * that generated the replay file */
@@ -59,41 +52,8 @@ public class ReplayMetaData {
      * player we can see in the replay */
     private String[] players;
 
-    private final InputStream metaDataInputStream;
-
-    public ReplayMetaData(InputStream metaDataInputStream) {
-        this.metaDataInputStream = metaDataInputStream;
-
-        readMetaData();
-    }
-
-    private void readMetaData() {
-        try (InputStreamReader reader = new InputStreamReader(this.metaDataInputStream)) {
-            Gson gson = new Gson();
-
-            JsonObject metaDataRoot = gson.fromJson(reader, JsonObject.class);
-            for (Map.Entry<String, JsonElement> entry : metaDataRoot.entrySet()) {
-                JsonElement value = entry.getValue();
-
-                switch (entry.getKey()) {
-                    case "singleplayer":        this.singleplayer = value.getAsBoolean(); break;
-                    case "serverName":          this.serverName = value.getAsString(); break;
-                    case "customServerName":    this.customServerName = value.getAsString(); break;
-                    case "duration":            this.duration = value.getAsInt(); break;
-                    case "date":                this.date = value.getAsLong(); break;
-                    case "mcversion":           this.mcversion = value.getAsString(); break;
-                    case "fileFormat":          this.fileFormat = value.getAsString(); break;
-                    case "fileFormatVersion":   this.fileFormatVersion = value.getAsInt(); break;
-                    case "protocol":            this.protocol = ProtocolVersion.getFromId(value.getAsInt()); break;
-                    case "generator":           this.generator = value.getAsString(); break;
-                    case "selfId":              this.selfId = value.getAsInt(); break;
-                    case "players":             this.players = JsonUtils.getAsStringArray(value.getAsJsonArray()); break;
-                    default: break;
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public static ReplayMetaData from(final InputStream inputStream) {
+        return JsonUtils.fromStream(inputStream, ReplayMetaData.class);
     }
 
     public boolean isSingleplayer() {
@@ -116,7 +76,7 @@ public class ReplayMetaData {
         return this.date;
     }
 
-    public String getMcversion() {
+    public String getMcVersion() {
         return this.mcversion;
     }
 
@@ -129,7 +89,7 @@ public class ReplayMetaData {
     }
 
     public Protocol getProtocol() {
-        return this.protocol;
+        return ProtocolVersion.getInstance().getFromId(this.protocol);
     }
 
     public String getGenerator() {
@@ -142,9 +102,5 @@ public class ReplayMetaData {
 
     public String[] getPlayers() {
         return this.players;
-    }
-
-    public InputStream getMetaDataInputStream() {
-        return this.metaDataInputStream;
     }
 }

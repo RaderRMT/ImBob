@@ -1,11 +1,8 @@
 package fr.rader.imbob.utils.data;
 
-import fr.rader.imbob.protocol.Protocol;
 import fr.rader.imbob.protocol.ProtocolVersion;
-import fr.rader.imbob.psl.tokens.TokenType;
 import fr.rader.imbob.types.Position;
 import fr.rader.imbob.types.VarInt;
-import fr.rader.imbob.types.VarLong;
 import fr.rader.imbob.types.nbt.TagCompound;
 
 import java.io.*;
@@ -33,7 +30,7 @@ public class DataWriter implements AutoCloseable {
         this.data = new ArrayList<>();
     }
 
-    public DataWriter(OutputStream outputStream) throws IOException {
+    public DataWriter(OutputStream outputStream) {
         this.outputStream = outputStream;
         this.data = null;
     }
@@ -50,6 +47,10 @@ public class DataWriter implements AutoCloseable {
 
         this.buffer[this.index] = (byte) (value & 0xff);
         this.index++;
+    }
+
+    public void writeBoolean(boolean value) {
+        writeByte(value ? 1 : 0);
     }
 
     public void writeShort(int value) {
@@ -73,10 +74,18 @@ public class DataWriter implements AutoCloseable {
         }
     }
 
+    public void writeByteList(List<Byte> values) {
+        values.forEach(this::writeByte);
+    }
+
     public void writeIntArray(int[] values) {
         for (int value : values) {
             writeInt(value);
         }
+    }
+
+    public void writeIntList(List<Integer> values) {
+        values.forEach(this::writeInt);
     }
 
     public void writeLongArray(long[] values) {
@@ -85,12 +94,20 @@ public class DataWriter implements AutoCloseable {
         }
     }
 
+    public void writeLongList(List<Long> values) {
+        values.forEach(this::writeLong);
+    }
+
     public void writeFloat(float value) {
         writeByteArray(ByteBuffer.allocate(4).putFloat(value).array());
     }
 
     public void writeDouble(double value) {
         writeByteArray(ByteBuffer.allocate(8).putDouble(value).array());
+    }
+
+    public void writeVarInt(final VarInt value) {
+        writeVarInt(value.get());
     }
 
     public void writeVarInt(int value) {
@@ -119,6 +136,15 @@ public class DataWriter implements AutoCloseable {
         } while (value != 0);
     }
 
+    public void writeNBT(final TagCompound value) {
+        value.write(this);
+    }
+
+    public void writePacketString(final String value) {
+        writeVarInt(value.length());
+        writeString(value);
+    }
+
     public void writeString(String value) {
         writeByteArray(value.getBytes(StandardCharsets.UTF_8));
     }
@@ -129,7 +155,7 @@ public class DataWriter implements AutoCloseable {
     }
 
     public void writePosition(Position position) {
-        if (position.getProtocol().isBeforeExclusive(ProtocolVersion.get("MC_1_14"))) {
+        if (position.getProtocol().isBeforeExclusive(ProtocolVersion.getInstance().get("MC_1_14"))) {
             writeLong(
                     ((long) (position.getX() & 0x3ffffff) << 38) |
                     ((long) (position.getY() & 0xfff) << 26) |
@@ -144,76 +170,13 @@ public class DataWriter implements AutoCloseable {
         }
     }
 
-    public void writeFromTokenType(TokenType type, Object value, Protocol version) {
-        switch (type) {
-            case BOOLEAN:
-            case BYTE:
-            case ANGLE:
-                writeByte((Integer) value);
-                break;
-
-            case SHORT:
-                writeShort((Integer) value);
-                break;
-
-            case INT:
-                writeInt((Integer) value);
-                break;
-                
-            case LONG:
-                writeLong((Long) value);
-                break;
-
-            case CHAT:
-            case STRING:
-                String string = (String) value;
-
-                writeVarInt(string.length());
-                writeString(string);
-                break;
-
-            case FLOAT:
-                writeFloat((Float) value);
-                break;
-
-            case DOUBLE:
-                writeDouble((Double) value);
-                break;
-
-            case VARINT:
-                writeVarInt(((VarInt) value).getValue());
-                break;
-
-            case VARLONG:
-                writeVarLong(((VarLong) value).getValue());
-                break;
-
-            case NBT:
-                TagCompound compound = (TagCompound) value;
-                
-                compound.write(this);
-                break;
-
-            case POSITION:
-                writePosition((Position) value);
-                break;
-
-            case UUID:
-                writeUUID((UUID) value);
-                break;
-
-            default:
-                break;
-        }
-    }
-
     public void flush() {
         if (this.outputStream == null) {
             return;
         }
 
         try {
-            this.outputStream.write(buffer, 0, index);
+            this.outputStream.write(this.buffer, 0, this.index);
             this.outputStream.flush();
 
             this.index = 0;
@@ -224,6 +187,10 @@ public class DataWriter implements AutoCloseable {
 
     public List<Byte> getData() {
         return this.data;
+    }
+
+    public int index() {
+        return this.index;
     }
 
     @Override

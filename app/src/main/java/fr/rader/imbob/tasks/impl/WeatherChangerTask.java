@@ -6,7 +6,6 @@ import fr.rader.imbob.packets.Packet;
 import fr.rader.imbob.packets.PacketAcceptor;
 import fr.rader.imbob.packets.Packets;
 import fr.rader.imbob.protocol.Protocol;
-import fr.rader.imbob.psl.packets.serialization.entries.VariableEntry;
 import fr.rader.imbob.tasks.AbstractTask;
 import fr.rader.imbob.tasks.annotations.Task;
 import fr.rader.imbob.types.VarInt;
@@ -64,15 +63,15 @@ public class WeatherChangerTask extends AbstractTask {
 
                 // we add the Begin Rain reason, with a 0f value.
                 // the value doesn't matter, it can be anything
-                beginRainPacket.addEntry(new VariableEntry("reason", BEGIN_RAIN));
-                beginRainPacket.addEntry(new VariableEntry("value", 0f));
+                beginRainPacket.add("reason", BEGIN_RAIN);
+                beginRainPacket.add("value", 0f);
 
                 // we clone an empty version of the beginRainPacket packet
                 Packet setRainLevelPacket = beginRainPacket.cloneEmpty();
                 // we add the Rain Level Change reason, with a 1f value.
                 // 1f means the rain is at it's full intensity.
-                setRainLevelPacket.addEntry(new VariableEntry("reason", RAIN_LEVEL_CHANGE));
-                setRainLevelPacket.addEntry(new VariableEntry("value", 1f));
+                setRainLevelPacket.add("reason", RAIN_LEVEL_CHANGE);
+                setRainLevelPacket.add("value", 1f);
 
                 // we add the packets to the queue with the correct order
                 packets.add(beginRainPacket);
@@ -82,8 +81,8 @@ public class WeatherChangerTask extends AbstractTask {
                 // a third Change Game State packet and set the thunder level to 1f
                 if (newWeather.equals("Thunder")) {
                     Packet setThunderLevelPacket = beginRainPacket.cloneEmpty();
-                    setThunderLevelPacket.addEntry(new VariableEntry("reason", THUNDER_LEVEL_CHANGE));
-                    setThunderLevelPacket.addEntry(new VariableEntry("value", 1f));
+                    setThunderLevelPacket.add("reason", THUNDER_LEVEL_CHANGE);
+                    setThunderLevelPacket.add("value", 1f);
 
                     // we add the packet to the queue
                     packets.add(setThunderLevelPacket);
@@ -92,7 +91,7 @@ public class WeatherChangerTask extends AbstractTask {
 
             case "change_game_state":
                 // we get the Change Game State packet's reason entry
-                int reason = packet.getEntry("reason").getAs(VariableEntry.class).getValueAs(Integer.class);
+                int reason = packet.get("reason", Integer.class);
 
                 // we return if the packet doesn't affect the weather
                 if (

@@ -5,9 +5,9 @@ public class Protocol {
     private final String name;
     private final int version;
 
-    private Protocol() {
-        this.name = "No Name";
-        this.version = -1;
+    public Protocol(final String name, final int version) {
+        this.name = name;
+        this.version = version;
     }
 
     public String getName() {
@@ -18,7 +18,7 @@ public class Protocol {
         return this.version;
     }
 
-/**
+    /**
      * <pre>
      * Check if the given protocol version is newer or as new as the other version
      * For example, these two will return true:
@@ -124,5 +124,13 @@ public class Protocol {
     */
     public boolean isBeforeExclusive(Protocol otherVersion) {
         return this.version < otherVersion.getVersion();
+    }
+
+    @Override
+    public String toString() {
+        return "Protocol{" +
+                "name='" + name + '\'' +
+                ", version=" + version +
+                '}';
     }
 }

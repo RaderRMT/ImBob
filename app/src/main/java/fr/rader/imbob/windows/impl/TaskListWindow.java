@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fr.rader.imbob.tasks.AbstractTask;
-import fr.rader.imbob.utils.MathUtils;
 import fr.rader.imbob.windows.AbstractWindow;
 import imgui.ImGui;
 import imgui.flag.ImGuiWindowFlags;
@@ -44,7 +43,7 @@ public class TaskListWindow extends AbstractWindow {
         if (ImGui.button("Remove Task")) {
             // if the user click the button, we'll check
             // if the user selected a task to remove
-            if (this.tasks.size() != 0 && this.selectedTask.get() < this.tasks.size()) {
+            if (!this.tasks.isEmpty() && this.selectedTask.get() < this.tasks.size()) {
                 // if that's the case, we remove the task
                 this.tasks.remove(this.selectedTask.get());
                 // and update the task names for the list box

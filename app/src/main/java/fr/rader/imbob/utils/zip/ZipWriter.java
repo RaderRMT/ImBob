@@ -70,8 +70,8 @@ public class ZipWriter implements AutoCloseable {
         this.zipOutputStream.putNextEntry(new ZipEntry(entryName));
 
         int dataLengthToWrite;
-        while ((dataLengthToWrite = data.read(buffer)) > 0) {
-            this.zipOutputStream.write(buffer, 0, dataLengthToWrite);
+        while ((dataLengthToWrite = data.read(this.buffer)) > 0) {
+            this.zipOutputStream.write(this.buffer, 0, dataLengthToWrite);
         }
 
         data.close();
@@ -81,8 +81,7 @@ public class ZipWriter implements AutoCloseable {
     @Override
     public void close() throws IOException {
         if (this.isCreatingEntry) {
-            LoggerWindow.error("Cannot close ZIP when creating Entry");
-            return;
+            closeEntry();
         }
 
         this.zipOutputStream.close();

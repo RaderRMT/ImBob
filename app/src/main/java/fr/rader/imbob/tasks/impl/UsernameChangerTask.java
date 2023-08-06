@@ -5,9 +5,10 @@ import java.util.Queue;
 import fr.rader.imbob.packets.Packet;
 import fr.rader.imbob.packets.PacketAcceptor;
 import fr.rader.imbob.packets.Packets;
-import fr.rader.imbob.psl.packets.serialization.entries.ArrayEntry;
-import fr.rader.imbob.psl.packets.serialization.entries.VariableEntry;
-import fr.rader.imbob.psl.packets.serialization.utils.EntryList;
+import fr.rader.imbob.packets.data.Data;
+import fr.rader.imbob.packets.data.DataBlock;
+import fr.rader.imbob.packets.data.DataBlockArray;
+import fr.rader.imbob.protocol.ProtocolVersion;
 import fr.rader.imbob.tasks.AbstractTask;
 import fr.rader.imbob.tasks.annotations.Task;
 import fr.rader.imbob.types.VarInt;
@@ -18,7 +19,7 @@ import imgui.type.ImString;
 public class UsernameChangerTask extends AbstractTask {
 
     private static final int ACTION_ADD_PLAYER = 0;
-    private static final int ACTION_UPDATE_DISPLAY_NAME = 3;
+    private static final int ACTION_ADD_PLAYER_BIT = 0x01;
 
     private final ImString targetUsername;
     private final ImString newUsername;
@@ -30,33 +31,50 @@ public class UsernameChangerTask extends AbstractTask {
         acceptPacket(PacketAcceptor.accept(Packets.get("player_info")));
     }
 
+    private void edit761(final Packet packet) {
+        int actionBitfield = packet.get("action", Integer.class);
+
+        if ((actionBitfield & ACTION_ADD_PLAYER_BIT) == 0) {
+            return;
+        }
+
+        DataBlockArray actions = packet.get("actions", DataBlockArray.class);
+        for (DataBlock action : actions) {
+            if (!action.contains("name")) {
+                continue;
+            }
+
+            Data usernameData = action.get("name");
+
+            if (usernameData.getValue().equals(this.targetUsername.get())) {
+                usernameData.setValue(this.newUsername.get());
+            }
+        }
+    }
+
+    private void edit(final Packet packet) {
+        int action = packet.get("action", VarInt.class).get();
+
+        if (action != ACTION_ADD_PLAYER) {
+            return;
+        }
+
+        DataBlockArray players = packet.get("players", DataBlockArray.class);
+        for (DataBlock player : players) {
+            Data usernameData = player.get("name");
+
+            if (usernameData.getValue().equals(this.targetUsername.get())) {
+                usernameData.setValue(this.newUsername.get());
+            }
+        }
+    }
+
     @Override
     protected void execute(Packet packet, Queue<Packet> packets) {
-        int action = packet.getEntry("action")
-                           .getAs(VariableEntry.class)
-                           .getValueAs(VarInt.class)
-                           .getValue();
-
-        switch (action) {
-            case ACTION_ADD_PLAYER:
-                ArrayEntry players = packet.getEntry("players").getAs(ArrayEntry.class);
-
-                for (EntryList player : players) {
-                    VariableEntry username = player.get("name").getAs(VariableEntry.class);
-
-                    if (username.getValueAs(String.class).equals(this.targetUsername.get())) {
-                        username.setValue(this.newUsername.get());
-                    }
-                }
-
-                break;
-
-            // i am keeping this for later
-            case ACTION_UPDATE_DISPLAY_NAME:
-                break;
-
-            default:
-                return;
+        if (packet.getProtocol().isAfterInclusive(ProtocolVersion.getInstance().get("MC_1_19_3"))) {
+            edit761(packet);
+        } else {
+            edit(packet);
         }
     }
 

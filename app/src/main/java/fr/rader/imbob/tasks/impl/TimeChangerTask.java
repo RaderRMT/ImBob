@@ -6,7 +6,6 @@ import fr.rader.imbob.packets.Packet;
 import fr.rader.imbob.packets.PacketAcceptor;
 import fr.rader.imbob.packets.Packets;
 import fr.rader.imbob.protocol.ProtocolVersion;
-import fr.rader.imbob.psl.packets.serialization.entries.VariableEntry;
 import fr.rader.imbob.tasks.AbstractTask;
 import fr.rader.imbob.tasks.annotations.Task;
 import fr.rader.imbob.types.nbt.TagCompound;
@@ -31,29 +30,25 @@ public class TimeChangerTask extends AbstractTask {
         // we accept the Join Game packet starting from MC 1.16 because
         // it's at this version that the Join Game packet contains the
         // fixed time field if the world/server has the doDaylightCycle gamerule set to false
-        acceptPacket(PacketAcceptor.accept(Packets.get("join_game")).from(ProtocolVersion.get("MC_1_16")));
+        acceptPacket(PacketAcceptor.accept(Packets.get("join_game")).from(ProtocolVersion.getInstance().get("MC_1_16")));
     }
 
     @Override
     public void execute(Packet packet, Queue<Packet> packets) {
         // turn the time of day to a negative value between 0 and -24000
-        long newTimeOfDay = -(Math.abs(this.timeOfDay.get()) % TICKS_PER_DAY);
+        long newTimeOfDay = Math.abs(this.timeOfDay.get()) % TICKS_PER_DAY;
 
         switch (packet.getPacketName()) {
             case "time_update":
                 // changing the time just means we need to change the time of day entry
-                packet.getEntry("time_of_day")
-                      .getAs(VariableEntry.class)
-                      .setValue(newTimeOfDay);
+                packet.update("time_of_day", -newTimeOfDay);
                 break;
 
             case "join_game":
                 // if the world/server has the doDaylightCycle set to false,
                 // then we have to edit the dimension codec field
                 // by adding or editing the "fixed_time" field
-                VariableEntry dimensionCodec = packet.getEntry("dimension_codec").getAs(VariableEntry.class);
-
-                TagCompound dimensionCodecCompound = dimensionCodec.getValueAs(TagCompound.class);
+                TagCompound dimensionCodecCompound = packet.get("dimension_codec", TagCompound.class);
                 TagCompound dimensionTypeRegistry = dimensionCodecCompound.get("minecraft:dimension_type").getAsTagCompound();
                 TagList<TagCompound> value = dimensionTypeRegistry.get("value").getAsCompoundList();
 

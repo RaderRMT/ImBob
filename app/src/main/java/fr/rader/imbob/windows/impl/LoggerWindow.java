@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import fr.rader.imbob.utils.DateUtils;
@@ -109,10 +108,7 @@ public class LoggerWindow extends AbstractWindow {
         }
 
         // we loop through each log items
-        Iterator<LogItem> iterator = new ArrayList<>(this.logItems).iterator();
-        while (iterator.hasNext()) {
-            LogItem item = iterator.next();
-
+        for (LogItem item : this.logItems) {
             // skip the item if it doesn't
             // contain what we're looking for
             if (!StringUtils.containsIgnoreCase(item.getMessage(), this.searchString.get())) {
@@ -154,8 +150,7 @@ public class LoggerWindow extends AbstractWindow {
 
     /**
      * Send a red error message to the logger window
-     * 
-     * @param className The class that called the method
+     *
      * @param message   The log message
     */
     public static void error(String message) {
@@ -171,8 +166,7 @@ public class LoggerWindow extends AbstractWindow {
 
     /**
      * Send a yellow warn message to the logger window
-     * 
-     * @param className The class that called the method
+     *
      * @param message   The log message
     */
     public static void warn(String message) {
@@ -188,8 +182,7 @@ public class LoggerWindow extends AbstractWindow {
 
     /**
      * Send a white normal message to the logger window
-     * 
-     * @param className The class that called the method
+     *
      * @param message   The log message
     */
     public static void info(String message) {
@@ -228,7 +221,7 @@ public class LoggerWindow extends AbstractWindow {
         stringBuilder.append(message);
         stringBuilder.append('\n');
 
-        System.out.print(stringBuilder.toString());
+        System.out.print(stringBuilder);
 
         try {
             this.writer.append(stringBuilder.toString());
