@@ -3,7 +3,7 @@ package fr.rader.imbob.utils.zip;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Iterator;
+import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -26,15 +26,15 @@ public class ZipReader extends ZipFile {
     }
 
     public void dumpToZipWriter(ZipWriter zipWriter) throws IOException {
-        Iterator<? extends ZipEntry> entries = entries().asIterator();
+        Enumeration<? extends ZipEntry> entries = entries();
 
-        while (entries.hasNext()) {
-            ZipEntry entry = entries.next();
+        while (entries.hasMoreElements()) {
+            ZipEntry entry = entries.nextElement();
 
             if (zipWriter.hasEntry(entry.getName())) {
                 continue;
             }
-            
+
             zipWriter.addEntry(
                     entry.getName(),
                     getInputStream(entry)

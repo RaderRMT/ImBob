@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.stream.Collectors;
 
 import bsh.EvalError;
 import bsh.Interpreter;
@@ -126,7 +127,7 @@ public class TaskExecutor {
                 Packet packet = new Packet(protocol, packetId);
                 List<AbstractTask> tasks = this.tasks.stream()
                         .filter(task -> task.accept(packet))
-                        .toList();
+                        .collect(Collectors.toList());
 
                 for (AbstractTask task : tasks) {
                     if (packet.isEmpty()) {
