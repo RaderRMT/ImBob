@@ -13,7 +13,6 @@ public class FileUtils {
      * @param path The path of the file to create
      * @param overwrite true if we want to overwrite the file, false otherwise
      * @return The file that was created, or null if it cannot be created
-     * @throws IOException If an I/O error occurs
      */
     public static File makeFile(String path, boolean overwrite) {
         return makeFile(new File(path), overwrite);
@@ -25,7 +24,6 @@ public class FileUtils {
      * @param file The file to create
      * @param overwrite true if we want to overwrite the file, false otherwise
      * @return The file that was created, or null if it cannot be created
-     * @throws IOException If an I/O error occurs
      */
     public static File makeFile(File file, boolean overwrite) {
         LoggerWindow.info("Creating file " + file.getAbsolutePath());

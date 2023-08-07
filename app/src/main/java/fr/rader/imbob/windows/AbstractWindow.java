@@ -80,7 +80,7 @@ public abstract class AbstractWindow {
     }
 
     /**
-     * This method is called at the start of the {@link AbstractWindow#render()} method,
+     * This method is called at the start of the {@link AbstractWindow#renderContent()} method,
      * and it is only called if the window is open.
      */
     protected void preRender(float menuBarHeight) {
@@ -96,7 +96,7 @@ public abstract class AbstractWindow {
     protected abstract void renderContent();
 
     /**
-     * This method is called at the end of the {@link AbstractWindow#render()} method,
+     * This method is called at the end of the {@link AbstractWindow#renderContent()} method,
      * after the window has been ended.
      */
     protected void postRender() {
