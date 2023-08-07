@@ -11,7 +11,7 @@ import java.io.IOException;
 public class ProtocolAdapter extends TypeAdapter<Protocol> {
 
     @Override
-    public void write(JsonWriter out, Protocol value) throws IOException {
+    public void write(JsonWriter out, Protocol value) {
         // we will never write protocol stuff
     }
 
