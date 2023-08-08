@@ -153,6 +153,7 @@ public class TaskExecutor {
 
             writer.flush();
             zipWriter.closeEntry();
+            writer.close();
 
             zipReader.dumpToZipWriter(zipWriter);
 
@@ -161,7 +162,6 @@ public class TaskExecutor {
             zipWriter.move();
         } catch (IOException | EvalError e) {
             e.printStackTrace();
-            System.exit(0);
         }
     }
 
