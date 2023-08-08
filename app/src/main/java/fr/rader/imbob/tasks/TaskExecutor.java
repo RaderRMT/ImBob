@@ -94,10 +94,9 @@ public class TaskExecutor {
         this.progressBar.setProgress(0f);
         this.progressBar.setLabel("Editing " + replay.getName() + "...");
 
-        try (
-                ZipReader zipReader = new ZipReader(replay);
-                DataReader reader = new DataReader(zipReader.getEntryAsStream("recording.tmcpr"))
-        ) {
+        try {
+            ZipReader zipReader = new ZipReader(replay);
+            DataReader reader = new DataReader(zipReader.getEntryAsStream("recording.tmcpr"));
             ZipWriter zipWriter = new ZipWriter(replay);
             DataWriter writer = new DataWriter(zipWriter.createEntry("recording.tmcpr"));
 
@@ -151,12 +150,15 @@ public class TaskExecutor {
                 }
             }
 
+            reader.close();
+
             writer.flush();
             zipWriter.closeEntry();
-            writer.close();
 
             zipReader.dumpToZipWriter(zipWriter);
+            zipReader.close();
 
+            writer.close();
             zipWriter.close();
 
             zipWriter.move();
