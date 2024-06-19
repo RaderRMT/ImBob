@@ -5,12 +5,14 @@ import fr.rader.imbob.protocol.Protocol;
 public class PacketAcceptor {
 
     private final PacketMetaData packetToAccept;
+    private final boolean isConfigurationPacket;
 
     private Protocol fromVersion;
     private Protocol toVersion;
 
-    private PacketAcceptor(final PacketMetaData packet) {
+    private PacketAcceptor(final PacketMetaData packet, final boolean isConfigurationPacket) {
         this.packetToAccept = packet;
+        this.isConfigurationPacket = isConfigurationPacket;
     }
 
     /**
@@ -20,7 +22,17 @@ public class PacketAcceptor {
      * @return          A new {@link PacketAcceptor} for the {@link PacketMetaData}
      */
     public static PacketAcceptor accept(final PacketMetaData packet) {
-        return new PacketAcceptor(packet);
+        return accept(packet, false);
+    }
+
+    /**
+     * Create a new {@link PacketAcceptor} for the given {@link PacketMetaData}
+     *
+     * @param packet    The packet to accept
+     * @return          A new {@link PacketAcceptor} for the {@link PacketMetaData}
+     */
+    public static PacketAcceptor accept(final PacketMetaData packet, final boolean isConfigurationPacket) {
+        return new PacketAcceptor(packet, isConfigurationPacket);
     }
 
     /**
@@ -56,6 +68,10 @@ public class PacketAcceptor {
      * @return          True if the packet is accepted, false otherwise
      */
     public boolean accept(final Packet packet) {
+        if (packet.isConfigurationPacket() != this.isConfigurationPacket) {
+            return false;
+        }
+
         if (this.toVersion != null) {
             if (this.fromVersion != null) {
                 return packet.getProtocol().isAfterInclusive(this.fromVersion) &&

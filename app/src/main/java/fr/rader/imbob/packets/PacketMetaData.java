@@ -58,6 +58,19 @@ public class PacketMetaData {
         return -1;
     }
 
+    public int getConfigurationPacketId(final Protocol protocol) {
+        // we loop through each version in the versions map
+        for (Map.Entry<String, Integer> entry : this.versions.entrySet()) {
+            // and we return the packet id once we found the correct protocol
+            if (ProtocolVersion.getInstance().get(entry.getKey()).isBeforeInclusive(protocol)) {
+                return entry.getValue();
+            }
+        }
+
+        // if the packet id isn't defined, we return -1
+        return -1;
+    }
+
     public String getName() {
         return this.name;
     }

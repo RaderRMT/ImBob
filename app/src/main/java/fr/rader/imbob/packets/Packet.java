@@ -8,14 +8,16 @@ public class Packet {
 
     private final Protocol protocolVersion;
     private final VarInt packetId;
+    private final boolean isConfigurationPacket;
 
     private final DataBlock data;
 
     private String packetName;
 
-    public Packet(final Protocol protocolVersion, final VarInt packetId) {
+    public Packet(final Protocol protocolVersion, final VarInt packetId, final boolean isConfigurationPacket) {
         this.protocolVersion = protocolVersion;
         this.packetId = packetId;
+        this.isConfigurationPacket = isConfigurationPacket;
 
         this.data = new DataBlock();
     }
@@ -26,6 +28,10 @@ public class Packet {
 
     public VarInt getPacketId() {
         return this.packetId;
+    }
+
+    public boolean isConfigurationPacket() {
+        return this.isConfigurationPacket;
     }
 
     public String getPacketName() {
@@ -53,7 +59,7 @@ public class Packet {
     }
 
     public Packet cloneEmpty() {
-        Packet clonedPacket = new Packet(this.protocolVersion, this.packetId);
+        Packet clonedPacket = new Packet(this.protocolVersion, this.packetId, this.isConfigurationPacket);
         clonedPacket.setPacketName(this.packetName);
 
         return clonedPacket;

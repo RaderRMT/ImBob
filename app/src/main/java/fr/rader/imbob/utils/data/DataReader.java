@@ -186,6 +186,15 @@ public class DataReader implements AutoCloseable {
         return new TagCompound(readString(readShort()), this);
     }
 
+    public TagCompound readRootNBT() {
+        byte firstByte = (byte) readByte();
+        if (firstByte == 0) {
+            return null;
+        }
+
+        return new TagCompound("", this, true);
+    }
+
     public UUID readUUID() {
         ByteBuffer byteBuffer = ByteBuffer.wrap(readFollowingBytes(16));
         return new UUID(byteBuffer.getLong(), byteBuffer.getLong());

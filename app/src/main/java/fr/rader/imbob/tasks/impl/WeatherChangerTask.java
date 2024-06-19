@@ -58,7 +58,8 @@ public class WeatherChangerTask extends AbstractTask {
                         protocolVersion,
                         new VarInt(
                                 Packets.get("change_game_state").getPacketIdForProtocol(protocolVersion)
-                        )
+                        ),
+                        false
                 );
 
                 // we add the Begin Rain reason, with a 0f value.

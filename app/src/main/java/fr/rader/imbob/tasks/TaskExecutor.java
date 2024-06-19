@@ -116,6 +116,8 @@ public class TaskExecutor {
 
             Queue<Packet> packets = new LinkedList<>();
 
+            int finishConfigurationPacketId = Packets.get("finish_configuration").getConfigurationPacketId(protocol);
+            boolean isConfiguration = (finishConfigurationPacketId != -1);
             while (reader.hasNext()) {
                 int timestamp = reader.readInt();
                 int packetSize = reader.readInt();
@@ -123,7 +125,7 @@ public class TaskExecutor {
 
                 this.progressBar.setProgress((float) timestamp / (float) metaData.getDuration());
 
-                Packet packet = new Packet(protocol, packetId);
+                Packet packet = new Packet(protocol, packetId, isConfiguration);
                 List<AbstractTask> tasks = this.tasks.stream()
                         .filter(task -> task.accept(packet))
                         .collect(Collectors.toList());
@@ -147,6 +149,10 @@ public class TaskExecutor {
                     writer.writeByteArray(reader.readFollowingBytes(packetSize - packetId.size()));
                 } else {
                     writePackets(timestamp, packets, writer);
+                }
+
+                if (isConfiguration && packetId.get() == finishConfigurationPacketId) {
+                    isConfiguration = false;
                 }
             }
 

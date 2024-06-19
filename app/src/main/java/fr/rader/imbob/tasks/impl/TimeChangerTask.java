@@ -31,6 +31,9 @@ public class TimeChangerTask extends AbstractTask {
         // it's at this version that the Join Game packet contains the
         // fixed time field if the world/server has the doDaylightCycle gamerule set to false
         acceptPacket(PacketAcceptor.accept(Packets.get("join_game")).from(ProtocolVersion.getInstance().get("MC_1_16")));
+
+        // on 1.20.2+, the dimension codec has been moved to a packet
+        acceptPacket(PacketAcceptor.accept(Packets.get("registry_data"), true).from(ProtocolVersion.getInstance().get("MC_1_20_2")));
     }
 
     @Override
@@ -39,31 +42,52 @@ public class TimeChangerTask extends AbstractTask {
         long newTimeOfDay = Math.abs(this.timeOfDay.get()) % TICKS_PER_DAY;
 
         switch (packet.getPacketName()) {
-            case "time_update":
+            case "time_update": {
                 // changing the time just means we need to change the time of day entry
                 packet.update("time_of_day", -newTimeOfDay);
                 break;
+            }
 
-            case "join_game":
+            case "join_game": {
+                if (packet.getProtocol().isAfterInclusive(ProtocolVersion.getInstance().get("MC_1_20_2"))) {
+                    return;
+                }
+
                 // if the world/server has the doDaylightCycle set to false,
                 // then we have to edit the dimension codec field
                 // by adding or editing the "fixed_time" field
                 TagCompound dimensionCodecCompound = packet.get("dimension_codec", TagCompound.class);
-                TagCompound dimensionTypeRegistry = dimensionCodecCompound.get("minecraft:dimension_type").getAsTagCompound();
-                TagList<TagCompound> value = dimensionTypeRegistry.get("value").getAsCompoundList();
-
-                // we add the fixed_time field to every dimension because why not
-                for (TagCompound compound : value) {
-                    TagCompound element = compound.get("element").getAsTagCompound();
-
-                    if (!element.has("fixed_time")) {
-                        element.add(new TagLong("fixed_time", newTimeOfDay));
-                    } else {
-                        element.get("fixed_time").getAsTagLong().setValue(newTimeOfDay);
-                    }
-                }
+                patchDimensionCodec(dimensionCodecCompound, newTimeOfDay);
 
                 break;
+            }
+
+            case "registry_data": {
+                // if the world/server has the doDaylightCycle set to false,
+                // then we have to edit the registry codec field
+                // by adding or editing the "fixed_time" field
+
+                TagCompound registryCodec = packet.get("registry_codec", TagCompound.class);
+                patchDimensionCodec(registryCodec, newTimeOfDay);
+
+                break;
+            }
+        }
+    }
+
+    private void patchDimensionCodec(TagCompound registryCodec, long newTimeOfDay) {
+        TagCompound dimensionTypeRegistry = registryCodec.get("minecraft:dimension_type").getAsTagCompound();
+        TagList<TagCompound> value = dimensionTypeRegistry.get("value").getAsCompoundList();
+
+        // we add the fixed_time field to every dimension because why not
+        for (TagCompound compound : value) {
+            TagCompound element = compound.get("element").getAsTagCompound();
+
+            if (!element.has("fixed_time")) {
+                element.add(new TagLong("fixed_time", newTimeOfDay));
+            } else {
+                element.get("fixed_time").getAsTagLong().setValue(newTimeOfDay);
+            }
         }
     }
 

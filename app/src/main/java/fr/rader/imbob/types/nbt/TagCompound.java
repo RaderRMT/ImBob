@@ -1,5 +1,8 @@
 package fr.rader.imbob.types.nbt;
 
+import fr.rader.imbob.protocol.Protocol;
+import fr.rader.imbob.protocol.ProtocolVersion;
+import fr.rader.imbob.replay.ReplayMetaData;
 import fr.rader.imbob.utils.data.DataReader;
 import fr.rader.imbob.utils.data.DataWriter;
 
@@ -12,8 +15,12 @@ public class TagCompound extends TagBase {
 
     private final List<TagBase> tags;
 
+    private final boolean isRootTag;
+
     public TagCompound() {
         setID(TAG_ID);
+
+        this.isRootTag = false;
 
         this.tags = new ArrayList<>();
     }
@@ -22,14 +29,21 @@ public class TagCompound extends TagBase {
         setID(TAG_ID);
         setName(name);
 
+        this.isRootTag = false;
+
         this.tags = new ArrayList<>();
     }
 
     public TagCompound(String name, DataReader reader) {
+        this(name, reader, false);
+    }
+
+    public TagCompound(String name, DataReader reader, boolean isRootTag) {
         setID(TAG_ID);
         setName(name);
 
         this.tags = new ArrayList<>();
+        this.isRootTag = isRootTag;
 
         readCompound(reader);
     }
@@ -90,8 +104,10 @@ public class TagCompound extends TagBase {
     public void write(DataWriter writer) {
         if (getName() != null) {
             writer.writeByte(TAG_ID);
-            writer.writeShort(getName().length());
-            writer.writeString(getName());
+            if (!this.isRootTag) {
+                writer.writeShort(getName().length());
+                writer.writeString(getName());
+            }
         }
 
         for (TagBase tag : tags) {
